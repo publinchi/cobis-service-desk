@@ -1,0 +1,4 @@
+api.update_uploaded do  
+  api.id @attachment.id
+  api.message @message
+end

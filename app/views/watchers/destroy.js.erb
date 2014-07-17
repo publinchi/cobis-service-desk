@@ -1,0 +1,2 @@
+$('#watchers').html('<%= escape_javascript(render(:partial => 'watchers/watchers', :locals => {:watched => @watched})) %>');
+$('#issue_watchers').html('<%= escape_javascript(render(:partial => 'watchers/issue_watchers', :locals => {:watched => @watched})) %>');

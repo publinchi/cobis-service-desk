@@ -1,0 +1,11 @@
+<%#
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+%>
+<%= javascript_tag("$('issue_assigned_to_id').hide()")%>
+<%= javascript_tag "alert('Por favor, valide el campo Asignado a.')"%>
+<%= options_for_select @users.collect {|p| [ p.name, p.id ]}.insert(0,""), 0 %>
+<%= javascript_tag("$('issue_assigned_to_id').show()")%>
+<%= javascript_tag("$('issue_assigned_to_id').focus()") %>
+
+

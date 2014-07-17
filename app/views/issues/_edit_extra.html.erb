@@ -1,0 +1,127 @@
+<% labelled_tabular_form_for :issue, @issue,
+  :url => {:action => 'update_extra', :id => @issue},
+  :html => {:id => 'issue-form',
+  :class => nil,
+  :method => :put,
+  :multipart => true} do |f| %>
+  <%= error_messages_for 'issue', 'time_entry' %>
+
+  <% @valor_validacion=1 if User.current.allowed_to?(:edit_issues_update, @project) %>
+  <% @valor_validacion_extra=2 if User.current.allowed_to?(:add_issue_notes_update, @project) %>
+
+  <div class="box">  
+    <%if @valor_validacion.to_s=='1'%>
+      <% if @edit_allowed %><!--Se desactivo la validacion de tener estados permitidos, para que los clientes externos no puedan modificar los atributos-->
+        <fieldset class="tabular"><legend><%= l(:label_change_properties) %>
+            <% if !@issue.new_record? && !@issue.errors.any? %>
+              <% if @validator_a == 1 || @validator_a.blank? %>
+                <small>(<%= link_to l(:label_more), {}, :onclick => 'Effect.toggle("issue_descr_fields", "appear", {duration:0.3}); return false;' %>)</small>
+              <% end %>
+            <% end %>
+          </legend>
+          <% if @validator_a == 1 || @validator_a.blank? %>
+            <%= render :partial => 'issues/form', :locals => {:f => f} %>
+          <% elsif @validator_a == 0 && !@validator_a.blank? %>
+            <% @not_permited=1 %>
+            <%= render :partial => 'issues/not_permited', :locals => {:f => f}%>
+          <% end %>
+        </fieldset>
+      <% end %>
+      <% if User.current.allowed_to?(:log_time, @project) %>
+        <fieldset class="tabular"><legend><%= l(:button_log_time) %></legend>
+          <% if @validator_a == 1 || @validator_a.blank? %>
+            <% fields_for :time_entry, @time_entry, { :builder => TabularFormBuilder, :lang => current_language} do |time_entry| %>
+              <div class="splitcontentleft">
+                <p><%= time_entry.text_field :hours, :size => 6, :label => :label_spent_time %> <%= l(:field_hours) %></p>
+              </div>
+              <div class="splitcontentright">
+                <p><%= time_entry.select :activity_id, activity_collection_for_select_options %></p>
+              </div>
+              <p><%= time_entry.text_field :comments, :size => 60 %></p>
+              <% @time_entry.custom_field_values.each do |value| %>
+                <p><%= custom_field_tag_with_label :time_entry, value %></p>
+              <% end %>
+            <% end %>
+          <% elsif @validator_a == 0 && !@validator_a.blank? %>
+            <% @not_permited=2 %>
+            <%= render :partial => 'issues/not_permited'%>
+          <% end %>
+        </fieldset>
+      <% end %>
+    <%end%>
+
+    <%if @valor_validacion_extra.to_s=='2'%>
+      <fieldset><legend><%= l(:field_notes) %></legend>
+        <% if @validator_b == 1 || @validator_b.blank? %>
+          <% if User.current.allowed_to?(:view_private_notes, @project,:global) %>
+            <%= @valor_check.to_s=='1' ? (render :partial => 'issues/form_custom_check_box_tag_1') : (render :partial => 'issues/form_custom_check_box_tag') %>
+          <% end %>
+          <%= text_area_tag 'notes', @notes, :cols => 60, :rows => 10, :class => 'wiki-edit' %>
+        <% elsif @validator_b == 0 && !@validator_b.blank? %>
+          <%= text_area_tag 'notes', "", :disabled => true %><br />
+          <% @not_permited=3 %>
+          <%= render :partial => 'issues/not_permited'%>
+        <% end %>
+
+        <% if @validator_b == 1 || @validator_b.blank? %>
+          <%= wikitoolbar_for 'notes' %>
+          <%= call_hook(:view_issues_edit_notes_bottom, { :issue => @issue, :notes => @notes, :form => f }) %>
+          <p><%=l(:label_attachment_plural)%><br /><%= render :partial => 'attachments/form' %></p>
+        <% end %>
+      </fieldset>
+    <%end%>
+  </div>
+
+  <%= f.hidden_field :lock_version %>
+
+  <% issue_status = IssueStatus.find(f.object.status_id)%>
+
+  <a id="button_submit">
+
+    <%if issue_status.is_required_status_change == true %>
+      <%= observe_field :issue_status_id,
+        :update => "button_submit",
+        :url => {:controller => 'issues', :action => 'required_status_change', :issue_id=>@issue.id, :issue_status_id1=>issue_status.id , :project_id1=>@project.id},
+        :with => "Form.Element.serialize('issue_status_id')"%>
+      <% if User.current.id == @issue.author_id || User.current.client == true%>
+        <%= (User.current.client==true && User.current.allowed_to?(:edit_issues, @project)) ? (button_to_function l(:button_submit), "alert('Debe modificar el estado.')") : (submit_tag l(:button_submit)) %>
+        <%= submit_tag l(:button_submit) if User.current.client!=true %>
+      <%else%>
+        <%= submit_tag l(:button_submit) %>
+      <%end%>
+      <!--Si @project.is_watcher_required es true, se valida si la peticion tiene seguidores-->
+    <% elsif issue_status.is_required_status_change == false || issue_status.is_required_status_change.blank?%>
+      <% if @project.is_watcher_required == true %>
+        <% watchers =Watcher.find(:all, :conditions => ["watchable_id=?", @issue.id]) %>   
+        <% if @issue.new_record? || @allowed_statuses.any? %>
+          <%= observe_field :issue_status_id,
+            :update => "button_submit",
+            :url => {:controller => 'issues', :action => 'required_watcher', :issue_id=>@issue.id, :issue_status_id1=>issue_status.id , :project_id1=>@project.id},
+            :with => "'issue_status_id='+encodeURIComponent($('issue_status_id').value)+'&custom_field_checked='+encodeURIComponent($('issue_custom_field_values_59_box').checked)"%>
+          <%= submit_tag l(:button_submit) %>
+        <% else %>
+          <%= submit_tag l(:button_submit) if (issue_status.is_watcher_required == true && watchers.length > 0) %>
+          <%= button_to_function l(:button_submit), "alert('Por favor, seleccione seguidores.')" if (issue_status.is_watcher_required == true && watchers.length == 0) %>
+          <%= submit_tag l(:button_submit) if (issue_status.is_watcher_required == false || issue_status.is_watcher_required.nil?) %>
+        <% end %>
+      <% elsif @project.is_watcher_required == false %>
+        <%= submit_tag l(:button_submit) %>
+      <% else %>
+        <%= submit_tag l(:button_submit) %>
+      <%end%>
+      <!--Si @project.is_watcher_required es false, no se valida si la petici�n tiene seguidores-->
+    <% else %>
+      <%= submit_tag l(:button_submit) %>
+    <% end %>
+  </a>
+
+  <%= link_to_remote l(:label_preview),
+    { :url => preview_issue_path(:project_id => @project, :id => @issue),
+    :method => 'post',
+    :update => 'preview',
+    :with => 'Form.serialize("issue-form")',
+    :complete => "Element.scrollTo('preview')"
+    }, :accesskey => accesskey(:preview) %>
+<% end %>
+
+<div id="preview" class="wiki"></div>  

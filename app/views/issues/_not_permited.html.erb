@@ -1,0 +1,11 @@
+<%#
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+%>
+<%= "No tiene permisos para modificar las propiedades de la petición" if @not_permited==1 %>
+<%= "No tiene permisos para modificar el tiempo dedicado de la petición" if @not_permited==2 %>
+<%= "No tiene permisos para agregar una nota a la petición" if @not_permited==3 %>
+
+
+
+

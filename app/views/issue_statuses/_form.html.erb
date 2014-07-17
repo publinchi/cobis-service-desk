@@ -1,0 +1,34 @@
+<%= error_messages_for 'issue_status' %>
+
+<div class="box tabular">
+  <p><%= f.text_field :name, :required => true %></p>
+  <% if Issue.use_status_for_done_ratio? %>
+    <p><%= f.select :default_done_ratio, ((0..10).to_a.collect {|r| ["#{r*10} %", r*10] }), :include_blank => true, :label => :field_done_ratio %></p>
+  <% end %>
+  <p><%= f.check_box :is_closed %></p>
+  <p><%= f.check_box :is_default %></p>
+  <p><label for="issue_status_is_watcher_required"><%=l(:field_is_watcher_required)%></label>
+    <%= check_box 'issue_status', 'is_watcher_required' %></p>
+  <p><label for="issue_status_is_required_status_change"><%=l(:field_is_required_status_change)%></label>
+    <%= check_box 'issue_status', 'is_required_status_change' %></p>
+  <p><label for="issue_status_is_required_nota_publica_obligatoria"><%=l(:label_status_nota)%></label>
+    <%= check_box 'issue_status', 'is_required_nota_publica_obligatoria' %></p>
+
+  <%= call_hook(:view_issue_statuses_form, :issue_status => @issue_status) %>
+
+  <% if !@issue_status.new_record? %>
+    <fieldset id="estados" class="collapsible collapsed">
+      <legend onclick="toggleFieldset(this);"><%= l(:label_validacion_cambio_estado) %></legend>
+      <div style="display: none;">
+        <% @custom_field_filtrado=[] %>
+        <% @custom_field_filtrado=IssueStatus.find_by_id_custom(@issue_status.id) %>
+        <table> <tr> <td>       </td> <td>Obligatorio</td></tr>
+          <% @custom_field_filtrado.each do |custom_f| %>
+            <tr> <td><%= custom_f["name"] %></td>
+              <td><%= check_box_tag "check2[]", custom_f["id"], allowed_custom_status_estado?(@issue_status.id,custom_f["id"]), :disabled=>true %></td></tr>
+          <% end %>
+        </table>
+      </div>
+    </fieldset>
+  <% end %>
+</div>

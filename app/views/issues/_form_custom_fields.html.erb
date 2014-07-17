@@ -1,0 +1,54 @@
+<% custom_field_values = @issue.editable_custom_field_values %>
+<div class="splitcontent">
+  <div class="splitcontentleft">
+    <% i = 0 %>
+    <% allowed_values = [] %>
+    <% custom_field_values.each do |value| %>
+      <% if @issue.new_record? && role_allowed_by_custom_field?(CustomFieldsInsertRoles, value) %>
+        <% allowed_values << value %>
+      <% elsif !@issue.new_record? %>
+        <% if role_allowed_by_custom_field?(CustomFieldsUpdateRoles, value) %>
+          <% if value.custom_field.id == 89 && show_value(value) == 'Sí' %>
+            <% allowed_values << value %>
+          <% else %>
+            <% allowed_values << value %>
+          <% end %>
+        <% else %>
+          <% allowed_values << value %>
+        <% end %>
+      <% end %>
+    <% end -%>
+    <% split_on = (allowed_values.size / 2.0).ceil - 1 %>
+    <% if @issue.new_record? %>
+      <% allowed_values.each do |value| %>
+        <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+        <% if i == split_on -%>
+        </div><div class="splitcontentright">
+        <% end -%>
+        <% i += 1 -%>
+      <% end -%>
+    <% elsif !@issue.new_record? %>
+      <% allowed_values.each do |value| %>
+        <% if role_allowed_by_custom_field?(CustomFieldsUpdateRoles, value) %>
+          <% if value.custom_field.id == 89 && show_value(value) == 'Sí' %>
+            <p><%= custom_field_tag_with_label :issue, value %></p>
+          <% elsif value.custom_field.id == 12 %>
+            <% if show_value(value).nil? %>
+              <p><%= custom_field_tag_with_label :issue, value %> </p>
+            <% elsif !show_value(value).nil?%>
+              <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+            <% end %>
+          <% else %>
+            <p><%= custom_field_tag_with_label :issue, value %></p>
+          <% end %>
+        <% else %>
+          <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+        <% end %>
+        <% if i == split_on -%>
+        </div><div class="splitcontentright">
+        <% end -%>
+        <% i += 1 -%>
+      <% end -%>
+    <% end %>
+  </div>
+</div>

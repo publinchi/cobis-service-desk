@@ -1,0 +1,58 @@
+<%#
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+%>
+
+<% if @submit==0 %>
+  <%= submit_tag l(:button_submit) %>
+
+<% elsif @submit==1 %>
+  <% if @project1.is_public_required == true && @project1.is_watcher_required == true %>
+    <% if @issue_status1.is_default == true %>
+      <%=  button_to_function l(:button_submit),
+        "
+      if(document.getElementById('notes').value != '')
+      {
+      document.issue-form.submit();
+      }
+      else
+      {alert('Por favor, ingrese un texto en la nota.');}
+      "%>
+    <% else %>
+      <%= submit_tag l(:button_submit) %>
+    <% end %>
+  <% else %>
+    <%= submit_tag l(:button_submit) %>
+  <% end %>
+
+<% elsif @submit==2 %>
+  <%= button_to_function l(:button_submit), "alert('Por favor, seleccione seguidores.')" %>
+<% elsif @submit==3 %>
+  <% if @project1.is_public_required == true && @project1.is_watcher_required == true %>
+    <% if @issue_status1.is_default == true %>
+      <%=  button_to_function l(:button_submit),
+        "
+      if(document.getElementById('notes').value != '')
+      {
+      document.issue-form.submit();
+      }
+      else
+      {alert('Por favor, ingrese un texto en la nota.');}
+      "%>
+    <% else %>
+      <%= submit_tag l(:button_submit) %>
+    <% end %>
+  <% else %>
+    <%= submit_tag l(:button_submit) %>
+  <% end %>
+<% elsif @submit==4 %>
+  <% if User.current.client==true %>
+    <% if User.current.allowed_to?(:edit_issues, @project) %>
+      <%= button_to_function l(:button_submit), "alert('Debe modificar el estado.')" %>
+    <% else %>
+      <%= submit_tag l(:button_submit) %>
+    <% end %>
+  <% else %>
+    <%= submit_tag l(:button_submit) %>
+  <% end %>
+<% end %>

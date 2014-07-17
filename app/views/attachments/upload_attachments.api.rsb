@@ -1,0 +1,4 @@
+api.upload do
+  api.token @attachment.token
+  api.id @attachment.id
+end

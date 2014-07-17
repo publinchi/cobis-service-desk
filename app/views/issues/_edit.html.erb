@@ -1,0 +1,76 @@
+<%= labelled_form_for @issue, :html => {:id => 'issue-form', :multipart => true} do |f| %>
+  <%= error_messages_for 'issue', 'time_entry' %>
+  <%= render :partial => 'conflict' if @conflict %>
+  <div class="box">
+    <% if @edit_allowed %>
+      <fieldset class="tabular"><legend><%= l(:label_change_properties) %></legend>
+        <div id="all_attributes">
+          <% if @validator_a == 1 || @validator_a.blank? %>
+            <%= render :partial => 'form', :locals => {:f => f} %>
+          <% elsif @validator_a == 0 && !@validator_a.blank? %>
+            <% @not_permited=1 %>
+            <%= render :partial => 'issues/not_permited'%>
+          <% end %>
+        </div>
+      </fieldset>
+    <% end %>
+    <% if User.current.allowed_to?(:add_issue_watchers, @project) ||
+        (@issue.watchers.present? && User.current.allowed_to?(:view_issue_watchers, @project)) %>
+      <fieldset class="tabular"><legend><%= l(:label_issue_watchers) %></legend>
+        <div id="issue_watchers">
+          <%= render :partial => 'watchers/issue_watchers', :locals => {:watched => @issue} %>
+        </div>
+      </fieldset>  
+    <% end %>
+    <% if User.current.allowed_to?(:log_time, @project) %>
+      <fieldset class="tabular"><legend><%= l(:button_log_time) %></legend>
+        <% if @validator_a == 1 || @validator_a.blank? %>
+          <%= labelled_fields_for :time_entry, @time_entry do |time_entry| %>
+            <div class="splitcontentleft">
+              <p><%= time_entry.text_field :hours, :size => 6, :label => :label_spent_time, :required => true %> <%= l(:field_hours) %></p>
+            </div>
+            <div class="splitcontentright">
+              <p><%= time_entry.select :activity_id, activity_collection_for_select_options, :required => true %></p>
+            </div>
+            <p><%= time_entry.text_field :comments, :size => 60 %></p>
+            <% @time_entry.custom_field_values.each do |value| %>
+              <p><%= custom_field_tag_with_label :time_entry, value %></p>
+            <% end %>
+          <% end %>
+        <% elsif @validator_a == 0 && !@validator_a.blank? %>
+          <% @not_permited = 2 %>
+          <%= render :partial => 'issues/not_permited'%>    
+        <% end %>
+      </fieldset>
+    <% end %>
+
+    <fieldset><legend><%= l(:field_notes) %></legend>
+      <% if @validator_b == 1 || @validator_b.blank? %>
+        <%= f.text_area :notes, :cols => 60, :rows => 10, :class => 'wiki-edit', :no_label => true %>
+      <% elsif !@validator_b.blank? && @validator_b == 0  %>
+        <%= f.text_area :notes, :disabled => true %>
+        <br />
+        <% @not_permited = 3 %>
+        <%= render :partial => 'issues/not_permited'%>
+      <% end %>
+      <%= wikitoolbar_for 'issue_notes' if @validator_b == 1 || @validator_b.blank? %>
+
+      <% if @issue.safe_attribute? 'private_notes' %>
+        <%= f.check_box :private_notes, :no_label => true, :checked=>true, :onchange => "showAlert('#{escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js')}')" %> <label for="issue_private_notes"><%= l(:field_private_notes) %></label>
+      <% end %>
+
+      <%= call_hook(:view_issues_edit_notes_bottom, { :issue => @issue, :notes => @notes, :form => f }) %>
+    </fieldset>
+
+    <fieldset><legend><%= l(:label_attachment_plural) %></legend>
+      <p><%= render :partial => 'attachments/form', :locals => {:container => @issue} %></p>
+    </fieldset>
+  </div>
+
+  <%= f.hidden_field :lock_version %>
+  <%= hidden_field_tag 'last_journal_id', params[:last_journal_id] || @issue.last_journal_id %>
+  <%= submit_tag l(:button_submit) %>
+  <%= preview_link preview_edit_issue_path(:project_id => @project, :id => @issue), 'issue-form' %>
+<% end %>
+
+<div id="preview" class="wiki"></div>

@@ -1,0 +1,12 @@
+replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
+
+<% if User.current.allowed_to?(:log_time, @issue.project) %>
+  $('#log_time').show();
+<% else %>
+  $('#log_time').hide();
+<% end %>
+
+<% if params[:name] == 'status_id' && !User.current.client?%>
+  alert('Por favor, valide el campo Asignado a.');
+  ("#issue_assigned_to_id").focus();
+<% end %>
