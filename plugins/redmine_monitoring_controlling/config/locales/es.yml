@@ -1,0 +1,57 @@
+en:
+    #menu
+    mc_tasksmgmt_menu_label: "Gestión de Peticiones"
+    mc_timemgmt_menu_label: "Gestión del Tiempo"
+    mc_humanresourcemgmt_menu_label: "Gestión del Talento Humano"     
+
+    #permissions
+    permission_view_home_monitoring_controlling: "Ver C&M Gestión de Peticiones"
+    permission_view_mc_time_mgmt_project: "Ver C&M Gestión del Tiempo"
+    permission_view_mc_human_resource_mgmt_project: "Ver C&M Gestión del Talento Humano"    
+        
+    monitoring_controlling_title: "Control y Monitoreo"
+    project_module_monitoring_controlling_project: "Control y Monitoreo por Proyecto"    
+    monitoring_controlling_project: "Control y Monitoreo por Proyecto"
+    statuses_issue_label_title: "Peticiones por Estado"
+    categories_issue_label_title: "Peticiones por Categoría"
+    
+    task_management_label_title: "Gestión de Peticiones"
+    task_manageable_chart_title: "Peticiones Realizables"
+    task_manageable_chart_overdue_title: "Peticiones Vencidas"
+    
+    manageable_label: "Realizable(s)"
+    unmanageable_label: "No Realizable(s)"
+    manageable_text_tip: "Peticiones con Fecha de Vencimiento."
+    unmanageable_text_tip: "Peticiones sin Fecha de Vencimiento."
+    
+    tasks_label: "Tarea(s)"
+    tasksof_label: "Tarea(s) de"    
+    
+    overdue_label: "Atrasada"
+    overdue_text: "Atrasada(s)"    
+    delivered_label: "Entregado"
+    tobedelivered_label: "Para ser Entregado"
+    days_late_text: "día(s) tarde"
+
+    close_label: "Cerrado"
+
+    # date format
+    default_date_format: "%Y/%m/%d"    
+
+    # time management screen
+    time_mgmt_label_title: "Horas Estimadas y Horas Dedicadas"
+    time_mgmt_areaspline_yaxis_label: "Tiempo (horas)"
+    time_mgmt_estimated_label: "Estimado"
+    time_mgmt_spent_label: "Executado"
+    time_mgmt_hours_label: "Horas(s)"
+    time_mgmt_error_no_issues_found_text: "No existe peticiones."
+    time_mgmt_error_no_issues_duedate_found_text: "No se encontraron peticiones con la fecha de vencimiento registrada."    
+    time_mgmt_version_label_title: "Versiones por Horas"
+
+    # human resource management
+    hr_mgmt_label_title: "Gestión del Recurso Humano"
+    hr_unassigned_issue_label: "Sin Asignación"
+    hr_columnbar_title_label: "Peticiones por Asignado"
+    hr_columnbar_yaxis_label: "Conteo de Peticiones"
+    hr_stackedcolumnbar_title_label: "Asignación y peticiones por Situación"
+    hr_stackedcolumnbar_yaxis_label: "Conteo de Peticiones"

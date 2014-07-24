@@ -1,0 +1,64 @@
+# English strings go here for Rails i18n
+en:
+  label_scrum2b: "Scrum"
+
+  label_scrum2b_board: "Tablero Scrum"
+  label_scrum2b_list: "Sprint Backlogs"
+  label_close_all_issues: "Cerrados"
+  label_select_issues_all_working: "Todas las petiones en Trabajo"
+  label_select_issues_my: "Mis Peticiones"
+  label_select_issues_my_completed: "Mis Peticiones Completas "
+  label_select_issues_new: "Todas las peticiones nuevas"
+  label_select_issues_completed: "Todas las peticiones Completas "
+  label_select_issues_closed: "Todas las peticiones Cerradas"
+  label_select_issues_all: "Todas las Peticiones"
+  
+  label_select_all_versions_working: "Todos los Sprints en Trabajo" 
+  label_select_all_versions: "Todos los Sprints"
+  label_select_backlog: "Backlog" 
+  label_btn_submit_selected: "Filtrar"
+  label_group_closed_sprin: "Sprint Cerrado"
+
+  label_head_issue_status: "Estado"
+  label_head_issue_subject: "Asunto"
+  label_head_issue_assignee: "Asignado"
+  label_head_issue_updated: "Actualizado"
+  label_head_issue_est_time: "Tiempo Estimado"
+  label_head_issue_done: "% Listo"
+  
+  
+  label_version_backlog: "Backlog"
+
+  label_select_all_member: "Todos los Miembros"
+  label_select_me: "Yo"
+  label_board_status_new: "Pendiente"
+  label_board_status_inprogress: "En Proceso"
+  label_board_status_completed: "Completo"
+  
+  label_board_issue_text_close_issue: "Petición Cerrada"
+  label_board_issue_text_edit_issue: "Editar Petición"
+  label_board_issue_time: "Tiempo Estimado:"
+  label_board_issue_description: "Descripción"
+  label_board_issue_new_issue: "Nueva Petición"
+  label_board_edit_btn_submit: "Guardar"
+  label_board_edit_btn_cancel: "Cancelar"
+  label_board_show_detail_issue: "Ver Detalle"
+  label_readmore: "Leer Mas"
+  label_hide: "Ocultar"
+  
+  label_tracker: "Tracker"
+  label_priority: "Priority"
+  label_start_date: "Start"
+  label_end_date: "End"
+
+  label_sprint: "Sprint"
+  label_me: "<< Yo >>"
+  
+  label_change_sprint: "Cambiar Sprint"
+  label_move_issues: "Mover a"
+  label_error_select_issues: "Por favor seleccione una petición..."
+  permission_view_issue: "Ver Petición"
+  label_sure_to_close_issues: "Esta seguro de cerrar la petición"
+  label_sure_to_delete_issues: "Esta seguro de borrar la petición"
+  label_sure_to_delete_notes: "Esta seguro de borrar las notas"
+  label_edit_detail: "Editar detalle"
