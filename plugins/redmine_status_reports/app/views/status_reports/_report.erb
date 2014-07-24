@@ -1,0 +1,38 @@
+<%if @status_by_id.count >0%>
+  <h1>Petición #<%=@id%></h1>
+  <% @first=@status_by_id.first%>
+  <table>
+    <thead><tr>
+        <th>Estado:</th>
+        <th>Duración:</th>
+      </tr></thead>
+    <tbody>
+      <% for state in @status_by_id %>
+        <tr>
+          <td><%=state["old_state"]%></td>
+
+          <%if state==@first%>
+            <%
+            puts "Primero: #{state["old_state"]}"
+            @issue=Issue.find(@id)
+            puts "Tiempo actual: #{Time.now}"
+            puts "Creado: #{@issue.created_on}" 
+            puts "Cambiado: #{state["state_date_changed"]}"
+            puts "Duración: #{distance_of_time_in_words @issue.created_on, Time.parse(state["state_date_changed"])}" 
+          %>
+            <td style="text-align: right"><%=distance_of_time_in_words @issue.created_on, Time.parse(state["state_date_changed"])%></td>
+          <%else%>
+            <%s=@status_by_id.index(state)-1%>
+            <td style="text-align: right"><%=distance_of_time_in_words Time.parse((@status_by_id.at(s))["state_date_changed"]), Time.parse(state["state_date_changed"])%></td>
+          <%end%>
+        </tr>
+      <%end%>
+      <tr>
+        <td><%= (@status_by_id.last)["new_state"] %></td>
+        <td style="text-align: right"><%=distance_of_time_in_words Time.parse((@status_by_id.last)["state_date_changed"]), Time.now%></td>
+      </tr>
+    </tbody>
+  </table>
+<% else %>
+  <a>No se encontró la petición.</a>
+<%end%>
