@@ -1663,7 +1663,7 @@ class Issue < ActiveRecord::Base
           before = @custom_values_before_change[c.custom_field_id]
           after = c.value
           @custom_bdd = custom_valor(@issue.id,c.custom_field_id)
-          if (c.custom_field_id == 95 || c.custom_field_id == 23 || c.custom_field_id == 61 || c.custom_field_id == 74 || c.custom_field_id == 100 || c.custom_field_id == 105 || c.custom_field_id == 60)&& (@custom_bdd != @custom_values_before_change[c.custom_field_id]) && @custom_values_before_change[c.custom_field_id].blank?
+          if (c.custom_field_id == 95 || c.custom_field_id == 23 || c.custom_field_id == 61 || c.custom_field_id == 74 || c.custom_field_id == 100 || c.custom_field_id == 105 || c.custom_field_id == 60 || c.custom_field_id == 12 || c.custom_field_id == 7)&& (@custom_bdd != @custom_values_before_change[c.custom_field_id]) && @custom_values_before_change[c.custom_field_id].blank?
             @current_journal.details << JournalDetail.new(:property => 'cf',
               :prop_key => c.custom_field_id,
               :old_value => @custom_values_before_change[c.custom_field_id],
