@@ -6,11 +6,21 @@ class S2bBoardsController < S2bApplicationController
   before_filter lambda { check_permission(:edit) }, :only => [:update, :update_status, :update_progress, :create, :sort, :close_issue]
   before_filter lambda { check_permission(:view) }, :only => [:index, :filter_issues]
   
+  def fecha_issue(id)
+    ActiveRecord::Base.connection.select_value("select updated_on from issues where id=#{id}")
+  end
+  
+  def fecha_actualizacion(id,fecha)
+    ActiveRecord::Base.connection.execute("update issues set updated_on='#{fecha}' where id=#{id}")
+  end
+  
   def index
     @max_position_issue = @hierarchy_project.first.issues.maximum(:s2b_position).to_i + 1
-    #@issue_no_position = @project.issues.where(:s2b_position => nil)
+    #    @issue_no_position = @project.issues.where(:s2b_position => nil)
     @issue_no_position.each do |issue|
+      @fecha_antes=fecha_issue(issue.id)
       issue.update_attribute(:s2b_position, @max_position_issue)
+      fecha_actualizacion(issue.id, @fecha_antes)
       @max_position_issue += 1
     end
     session[:view_issue] = "board"   
@@ -42,14 +52,26 @@ class S2bBoardsController < S2bApplicationController
   end
   
   def update_progress
-    @issue = Issue.find(params[:issue_id])
-    result = @issue.update_attribute(:done_ratio, params[:done_ratio])
-    if result
+    @issue=Issue.find(params[:issue_id])
+    @issue.init_journal(User.current)
+    @issue.private_notes=true
+    @issue.done_ratio = params[:done_ratio]
+    saved=@issue.save
+    if saved
       render :json => {:result => "success", :message => "Success to update the progress",
-                       :new_ratio => params[:done_ratio]}
+        :new_ratio => params[:done_ratio]}
     else
       render :json => {:result => "error", :message => @issue.errors.full_messages}
     end
+   
+    # Antes de cambio en plugin
+    #    result = @issue.update_attribute(:done_ratio, params[:done_ratio])
+    #    if result
+    #      render :json => {:result => "success", :message => "Success to update the progress",
+    #        :new_ratio => params[:done_ratio]}
+    #    else
+    #      render :json => {:result => "error", :message => @issue.errors.full_messages}
+    #    end
   end
   
   def sort
@@ -123,7 +145,7 @@ class S2bBoardsController < S2bApplicationController
     if @issue.update_attributes(params[:issue])
       data  = render_to_string(:partial => "/s2b_boards/draw_issue", :locals => {:issue => @issue})
       render :json => {:result => "edit_success", :message => "Success to update the message",
-                       :content => data}
+        :content => data}
     else
       render :json => {:result => "error", :message => @issue.errors.full_messages}
     end
@@ -151,7 +173,7 @@ class S2bBoardsController < S2bApplicationController
       
       Rails.logger.info "Success to create the issue"
       render :json => {:result => "create_success", :message => "Success to create the issue",
-                       :content => data, :id => @issue.id}
+        :content => data, :id => @issue.id}
     else
       Rails.logger.info @issue.errors.full_messages
       render :json => {:result => "failure", :message => @issue.errors.full_messages}
@@ -181,15 +203,15 @@ class S2bBoardsController < S2bApplicationController
     respond_to do |format|
       format.js {
         @return_content = render_to_string(:partial => "/s2b_boards/screen_boards",
-                                           :locals => {:completed_issues => @completed_issues,
-                                                       :project => @project,
-                                                       :new_issues => @new_issues,
-                                                       :in_progress_issues => @in_progress_issues,
-                                                       :tracker => @tracker, 
-                                                       :priority => @priority,
-                                                       :members => @members,
-                                                       :issue => @issue,
-                                                       :sprints => @sprints })
+          :locals => {:completed_issues => @completed_issues,
+            :project => @project,
+            :new_issues => @new_issues,
+            :in_progress_issues => @in_progress_issues,
+            :tracker => @tracker, 
+            :priority => @priority,
+            :members => @members,
+            :issue => @issue,
+            :sprints => @sprints })
       }
     end
   end

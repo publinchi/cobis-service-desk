@@ -67,7 +67,7 @@ class S2bListsController < S2bApplicationController
       format.html {}
     end
   end
-  
+
   def change_sprint
     array_id= Array.new
     array_id = params[:issue_id]
@@ -75,7 +75,12 @@ class S2bListsController < S2bApplicationController
 
     issues = Issue.where("id IN (?) AND project_id IN (?)",int_array,@hierarchy_project_id)
     issues.each do |issue|
-      issue.update_attribute(:fixed_version_id, params[:new_sprint])
+      issue.init_journal(User.current)
+      issue.private_notes=true
+      issue.fixed_version_id = params[:new_sprint]
+      issue.save
+      # Scrum inicial
+      #      issue.update_attribute(:fixed_version_id, params[:new_sprint])
     end
     filter_issues
   end
@@ -91,5 +96,4 @@ class S2bListsController < S2bApplicationController
     end
     filter_issues   
   end
-
 end
