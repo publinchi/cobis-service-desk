@@ -566,7 +566,7 @@ class IssuesController < ApplicationController
   def save_issue_with_child_records
     Issue.transaction do
       if @issue.route_id.blank?
-      elsif @issue.author_id == User.current.id || User.current.client == true
+      elsif (@issue.author_id == User.current.id || User.current.client == true) && @issue.tracker_id != 5
         @issue.assigned_to_id = @issue.route_id
       end
       
