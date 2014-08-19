@@ -39,7 +39,7 @@ $(function () {
             },
             series: [{
                 type: 'pie',
-                data: <%=@statuses.map{ |situacao| [situacao.name.to_s, situacao.totalissues.to_i]}.inspect.html_safe%>
+                data: <%=@modulos.map{ |situacao| [situacao["value"].to_s, situacao["totalissues"].to_i]}.inspect.html_safe%>
             }]
         });
     });
