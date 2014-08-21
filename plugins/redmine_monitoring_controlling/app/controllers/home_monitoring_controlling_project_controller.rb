@@ -5,6 +5,11 @@ class HomeMonitoringControllingProjectController < ApplicationController
   before_filter :find_project, :authorize
   menu_item :redmine_monitoring_controlling
 
+  def valores_modulo(total_issues, project_id)
+    ActiveRecord::Base.connection.select_all("SELECT cv.value, (count(cv.value)/#{total_issues})*100 as \"percent\", count(cv.value) as \"totalissues\" FROM issues i join custom_values cv on cv.customized_id=i.id where project_id=(#{project_id}) and cv.custom_field_id in (select custom_field_id from custom_fields_projects where project_id=#{project_id} and custom_field_id in (select id from custom_fields where name like '%dulo%'))
+group by cv.value")
+  end
+  
   def index
     #tool instance
     tool = McTools.new
@@ -55,8 +60,11 @@ class HomeMonitoringControllingProjectController < ApplicationController
                                             (SELECT COUNT(1) FROM issues where project_id in (#{stringSqlProjectsSubProjects}) and status_id = issue_statuses.id)
                                             AS totalissues
                                             FROM issue_statuses;")
+      @modulos=valores_modulo(@totalIssues, stringSqlProjectsSubProjects)
+      #      @modulos.map{ |situacao| [situacao.to_s, situacao.totalissues.to_i]}      
     else
       @statuses = nil
+      @modulos=nil
     end                                          
 
     #get management issues by main project

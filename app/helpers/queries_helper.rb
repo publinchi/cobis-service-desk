@@ -147,6 +147,9 @@ module QueriesHelper
       content_tag('span',
         (l(value.label_for(issue)) + " " + link_to_issue(other, :subject => false, :tracker => false)).html_safe,
         :class => value.css_classes_for(issue))
+    when :route_id
+      @user=User.find_by_id(value)
+      link_to_user @user
     else
       format_object(value)
     end
@@ -176,11 +179,19 @@ module QueriesHelper
       l(:general_text_Yes)
     when 'FalseClass'
       l(:general_text_No)
-    else
+    when 'Fixnum'
+      case column.name
+      when :route_id
+        @value = User.find_by_id(value)
+        value = @value.to_s
+      else
+        value.to_s
+      end
+    else     
       value.to_s
     end
   end
-
+  
   def query_to_csv(items, query, options={})
     encoding = l(:general_csv_encoding)
     columns = (options[:columns] == 'all' ? query.available_inline_columns : query.inline_columns)
