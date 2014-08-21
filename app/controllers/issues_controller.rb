@@ -567,7 +567,10 @@ class IssuesController < ApplicationController
     Issue.transaction do
       if @issue.route_id.blank?
       elsif (@issue.author_id == User.current.id || User.current.client == true) && @issue.tracker_id != 5
-        @issue.assigned_to_id = @issue.route_id
+        case @issue.status_id
+        when 46, 39 , 5 , 31, 16, 17, 24, 11, 27, 58, 12
+          @issue.assigned_to_id = @issue.route_id
+        end
       end
       
       if params[:time_entry] && User.current.client != true && !params[:time_entry][:hours].present?
