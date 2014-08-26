@@ -1,7 +1,7 @@
 <div class="attachments">
   <% permission =  User.current.allowed_to?(:view_private_notes, @project, :global) %>
   <% for attachment in attachments %>
-    <% if permission == true || attachment.visible == true %>
+    <% if permission == true || attachment.visible != false %>
       <p><%= link_to_attachment attachment, :class => 'icon icon-attachment', :download => true -%>
         <% if attachment.is_text? %>
           <%= link_to image_tag('magnifier.png'),
@@ -56,7 +56,7 @@
     <% unless images.empty? %>
       <div class='images'>
         <% images.each do |attachment| %>
-          <% if permission == true || attachment.visible == true %>
+          <% if permission == true || attachment.visible != false %>
             <%= link_to image_tag(url_for({:controller => 'attachments', :action => 'show', :id => attachment, :filename => attachment.filename }), :width => '180'),
               {:controller => 'attachments', :action => 'show', :id => attachment, :filename => attachment.filename }, :class => 'lightbox', :rel => 'attachments', :title => "#{attachment.filename}#{ ('-' + attachment.description) unless attachment.description.blank? }" %>
           <% end %>  
