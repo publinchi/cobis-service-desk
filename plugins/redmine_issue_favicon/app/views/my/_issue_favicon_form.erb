@@ -1,4 +1,8 @@
 <p>
   <label><%=h l(:label_issue_favicon) %></label>
-  <%= check_box :pref, 'issue_favicon' %>
+  <%if @user.admin==true%>
+    <%= check_box :pref, 'issue_favicon'%>
+  <%else%>
+    <%= check_box :pref, 'issue_favicon', :disabled=>true %>
+  <%end%>
 </p>
