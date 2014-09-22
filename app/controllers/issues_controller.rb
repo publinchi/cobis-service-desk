@@ -567,8 +567,13 @@ class IssuesController < ApplicationController
     Issue.transaction do
       if @issue.route_id.blank?
       elsif (@issue.author_id == User.current.id || User.current.client == true) && @issue.tracker_id != 5
-        case @issue.status_id
-        when 46, 39 , 5 , 31, 16, 17, 24, 11, 27, 58, 12
+        @project = Project.find @issue.project_id
+        if @project.parent_id == 10 || @project.parent_id == 103
+          case @issue.status_id
+          when 46, 39 , 5 , 31, 17, 24, 11, 27, 58, 12
+            @issue.assigned_to_id = @issue.route_id
+          end
+        else
           @issue.assigned_to_id = @issue.route_id
         end
       end
