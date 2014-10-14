@@ -93,12 +93,26 @@ module QueriesHelper
     current_user_allowed_to?(:assigned_to, columns, permissions[:assigned_to]) 
     current_user_allowed_to?(:view_responsable, columns, permissions[:view_responsable]) 
     current_user_allowed_to?(:is_private, columns, user_allowed_to_view_private_issues?(User.current.id, @project)) 
+    if User.current.client==true
+      columns.delete_if {|column| column.name.to_s=='priority'} 
+    else
+      columns.delete_if {|column| column.name.to_s=='cf_62'} 
+    end
     columns.reject(&:frozen?).collect {|column| [column.caption, column.name]}
   end
 
   def query_selected_inline_columns_options(query)
     permissions = allowed_to_permissions @project
     columns = query.columns 
+    @valor_index=columns.index { |x| x.name.to_s == "priority" }
+    @valor_index_cf=columns.index { |x| x.name.to_s == "cf_62" }
+    if User.current.client==true and @valor_index.blank?
+      columns.insert(3,QueryColumn.new(:priority, :sortable => "#{IssuePriority.table_name}.position", :default_order => 'desc', :groupable => true))
+    end
+    if User.current.client==false and @valor_index_cf.blank?
+      @cf=CustomField.find_by_id(62)
+      columns.insert(3,QueryCustomFieldColumn.new(@cf))
+    end
     current_user_allowed_to?(:due_date, columns, permissions[:due_date])
     current_user_allowed_to?(:category, columns, permissions[:category]) 
     current_user_allowed_to?(:start_date, columns, permissions[:start_date]) 
