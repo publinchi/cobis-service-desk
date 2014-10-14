@@ -554,7 +554,7 @@ class Issue < ActiveRecord::Base
         h
       end
       workflow_rules.each do |attr, rules|
-#        next if rules.size < roles.size
+        #        next if rules.size < roles.size
         uniq_rules = rules.uniq
         if uniq_rules.size == 1
           result[attr] = uniq_rules.first
@@ -1196,18 +1196,50 @@ class Issue < ActiveRecord::Base
 
   # Returns a string of css classes that apply to the issue
   def css_classes(user=User.current)
-    s = "issue tracker-#{tracker_id} status-#{status_id} #{priority.try(:css_classes)}"
-    s << ' closed' if closed?
-    s << ' overdue' if overdue?
-    s << ' child' if child?
-    s << ' parent' unless leaf?
-    s << ' private' if is_private?
-    if user.logged?
-      s << ' created-by-me' if author_id == user.id
-      s << ' assigned-to-me' if assigned_to_id == user.id
-      s << ' assigned-to-my-group' if user.groups.any? {|g| g.id == assigned_to_id}
+    if User.current.client == true
+      s = "issue tracker-#{tracker_id} status-#{status_id} #{priority.try(:css_classes)}"
+      s << ' closed' if closed?
+      s << ' overdue' if overdue?
+      s << ' child' if child?
+      s << ' parent' unless leaf?
+      s << ' private' if is_private?
+      if user.logged?
+        s << ' created-by-me' if author_id == user.id
+        s << ' assigned-to-me' if assigned_to_id == user.id
+        s << ' assigned-to-my-group' if user.groups.any? {|g| g.id == assigned_to_id}
+      end
+      s
+    else
+      @valor_prioridad=custom_valor(self.id,62)
+      @valor_prioridad_normal=IssuePriority.find_by_id(priority_id)
+      if !@valor_prioridad.blank?
+        case @valor_prioridad.to_s.gsub('í','i')
+        when '1. Critica'
+          @prioridad_funcion=IssuePriority.find_by_id(5)
+          priority=@prioridad_funcion
+        when '2. Media'
+          @prioridad_funcion=IssuePriority.find_by_id(4)
+          priority=@prioridad_funcion
+        when '3. No Critica'
+          @prioridad_funcion=IssuePriority.find_by_id(3)
+          priority=@prioridad_funcion
+        else
+          puts "no es ninguna opcion"
+        end
+      end
+      s = "issue tracker-#{tracker_id} status-#{status_id} #{priority.try(:css_classes)}"
+      s << ' closed' if closed?
+      s << ' overdue' if overdue?
+      s << ' child' if child?
+      s << ' parent' unless leaf?
+      s << ' private' if is_private?
+      if user.logged?
+        s << ' created-by-me' if author_id == user.id
+        s << ' assigned-to-me' if assigned_to_id == user.id
+        s << ' assigned-to-my-group' if user.groups.any? {|g| g.id == assigned_to_id}
+      end
+      s
     end
-    s
   end
   
   # TODO 722
