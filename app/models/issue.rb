@@ -611,6 +611,13 @@ class Issue < ActiveRecord::Base
           errors.add(:base, "Ingrese un texto en la nota.") if current_journal.private_notes == false && current_journal.notes.blank?
         end
       end
+      
+      #validación responsable obligatorio cuando se pase de pendiente a análisis funcional
+      
+      if User.current.allowed_to?(:view_responsable, self.project)
+        errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
+      end
+      
       self.custom_values.each do |c|
         @custom_values_antes_guardar1.store c.custom_field_id, c.value
         #Validacion nota publica

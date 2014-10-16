@@ -570,7 +570,7 @@ class IssuesController < ApplicationController
         @project = Project.find @issue.project_id
         if @project.parent_id == 10 || @project.parent_id == 103
           case @issue.status_id
-          when 46, 39 , 5 , 31, 17, 24, 11, 27, 58, 12
+          when 5, 11, 12, 24, 27, 31, 46
             @issue.assigned_to_id = @issue.route_id
           end
         else
