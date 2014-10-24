@@ -96,7 +96,10 @@ module QueriesHelper
     if User.current.client==true
       columns.delete_if {|column| column.name.to_s=='priority'} 
     else
-      columns.delete_if {|column| column.name.to_s=='cf_62'} 
+      @cf=CustomField.find_by_id(62)
+      if @project.all_issue_custom_fields.include? (@cf)
+        columns.delete_if {|column| column.name.to_s=='cf_62'} 
+      end
     end
     columns.reject(&:frozen?).collect {|column| [column.caption, column.name]}
   end
@@ -111,8 +114,12 @@ module QueriesHelper
     end
     if User.current.client==false and @valor_index_cf.blank?
       @cf=CustomField.find_by_id(62)
-      columns.insert(3,QueryCustomFieldColumn.new(@cf))
+      if @project.all_issue_custom_fields.include? (@cf)
+        columns.insert(3,QueryCustomFieldColumn.new(@cf))
+        columns.delete_if {|column| column.name.to_s=='priority'} 
+      end
     end
+    
     current_user_allowed_to?(:due_date, columns, permissions[:due_date])
     current_user_allowed_to?(:category, columns, permissions[:category]) 
     current_user_allowed_to?(:start_date, columns, permissions[:start_date]) 

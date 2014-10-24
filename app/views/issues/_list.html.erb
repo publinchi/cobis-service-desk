@@ -30,9 +30,12 @@
 
           <% if User.current.client == false and @valor_index_cf.blank?%>
             <%@cf=CustomField.find_by_id(62)%>
-            <% @columns.insert(3,QueryCustomFieldColumn.new(@cf))%>
+            <%if @project.all_issue_custom_fields.include? (@cf)%>
+              <%@columns.delete_if {|column| column.name.to_s=='priority'}%>
+              <% @columns.insert(3,QueryCustomFieldColumn.new(@cf))%>
+            <%end%>
           <%end%>
-          
+
           <% @columns.each do |column| %>
             <%= column_header(column) %>
           <% end %>
