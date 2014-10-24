@@ -631,5 +631,216 @@ order by 1)")
       raise ArgumentError
     end
   end
+  
+  
+  #Requerimiento 35603
+
+  #Funciones reporte de actividades
+  def estado_mas(id)
+    ActiveRecord::Base.connection.select_all("(select jd.id,
+ ie.name as \"old_state\",
+ iee.name as \"new_state\",
+ j.created_on as \"state_date_changed\",
+ j.journalized_id as \"issue_id\",
+ jd.journal_id as \"jdID\",
+ jd.prop_key as \"prop_key\",
+ (select name from projects where id=(select project_id from issues where id=#{id})) as \"nombre_proyecto\",
+(select u.firstname || ' ' || u.lastname from users u where cast(id as char(4))=(select value from journal_details where journal_id=(select max(journal_id) from journal_details where journal_id<jd.journal_id and prop_key='assigned_to_id' and journal_id in(select id from journals where journalized_id=#{id}) order by 1) and prop_key='assigned_to_id')) as \"asignado\",
+ (select created_on from journals where id=(select max(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and (prop_key='status_id' or prop_key='assigned_to_id') and journal_id<jd.journal_id)) as \"fecha_inicio\"
+from journal_details jd,
+ issue_statuses ie,
+ issue_statuses iee,
+ journals j
+where jd.prop_key='status_id' and
+ jd.old_value = CAST(ie.id AS CHAR(4)) and
+ jd.value = CAST(iee.id AS CHAR(4)) and
+ jd.journal_id=j.id and
+ jd.journal_id in (select journal_id from journal_details where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='status_id' and journal_id not in (select journal_id from journal_details where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='assigned_to_id' ))
+order by 1)")
+  end
+  
+  def asignado_mas(id)
+    ActiveRecord::Base.connection.select_all("(select jd.id,
+ u.firstname || ' ' || u.lastname as \"old_state\",
+ ue.firstname || ' ' || ue.lastname as \"new_state\",
+ j.created_on as \"state_date_changed\",
+ j.journalized_id as \"issue_id\",
+ jd.journal_id as \"jdID\",
+ jd.prop_key as \"prop_key\",
+ (select name from projects where id=(select project_id from issues where id=#{id})) as \"nombre_proyecto\",
+ (select name from issue_statuses where cast(id as char(4))=(select value from journal_details where journal_id=(select max(journal_id) from journal_details where prop_key='status_id' and journal_id in (select id from journals where journalized_id=#{id}) and journal_id <jd.journal_id) and prop_key='status_id')) as \"estado\",
+ (select created_on from journals where id=(select max(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and (prop_key='status_id' or prop_key='assigned_to_id') and journal_id<jd.journal_id)) as \"fecha_inicio\"
+from journal_details jd,
+ users u,
+ users ue,
+ journals j
+where jd.prop_key='assigned_to_id' and
+ jd.old_value = CAST(u.id AS CHAR(4)) and
+ jd.value = CAST(ue.id AS CHAR(4)) and
+ jd.journal_id=j.id and
+ jd.journal_id in (select journal_id from journal_details where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='assigned_to_id')
+order by 6)")
+  end
+  
+  def asignado_primer_estado(id)
+    ActiveRecord::Base.connection.select_value("select u.firstname || ' ' || u.lastname from users u where cast(id as char(4))=(select old_value from journal_details where journal_id =(select min(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='assigned_to_id') and prop_key='assigned_to_id')")
+  end
+  
+  def estado_ultimo_asignado(id)
+    ActiveRecord::Base.connection.select_value("select name from issue_statuses where cast(id as char(4))=(select value from journal_details where journal_id =(select max(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='status_id') and prop_key='status_id')")
+  end
+ 
+  def fecha_fin_estado(id)
+    ActiveRecord::Base.connection.select_value("select created_on from journals where id=(select min(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='assigned_to_id')")
+  end
+  
+  def max_journal_status(id)
+    ActiveRecord::Base.connection.select_value("select max(journal_id) from journal_details where journal_id in (select id from journals where journalized_id=#{id}) and (prop_key='status_id' or prop_key='assigned_to_id')")
+  end
+  #Fin de funciones
+  
+  def report_activities
+    @project = Project.find params[:project_id]
+    ###
+    retrieve_query
+    #    sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
+    #    sort_update(@query.sortable_columns)
+    
+    if @query.valid?
+      @limit = Setting.issues_export_limit.to_i
+
+      @issue_count = @query.issue_count
+      @issue_pages = Paginator.new self, @issue_count, @limit, params['page']
+      @offset ||= @issue_pages.current.offset
+      @issues = @query.issues(:include => [:assigned_to, :tracker, :priority, :category, :fixed_version],
+        #        :order => sort_clause,
+        :offset => @offset,
+        :limit => @limit)
+
+      @iss = []
+      @issues.each{|i|
+        issue = Issue.find i.id
+        @iss << issue
+      }
+      respond_to do |format|
+        format.html { send_data(statuses_to_csv_activities(@iss, @project), :type => 'text/csv; header=present', :filename => 'export.csv')  }
+      end      
+    end
+    ###
+  end
+  
+  def statuses_to_csv_activities(issues, project = nil)
+    #    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')
+    encoding = l(:general_csv_encoding)
+    export = FCSV.generate(:col_sep => l(:general_csv_separator)) do |csv|
+      # csv header fields
+      headers = [ "#",
+        l(:field_status),
+        l(:field_project),
+        "Asignado A",
+        "Fecha Inicio",
+        "Fecha Fin/Actual",
+        #        "Notas",
+        #        "Nota Publica",
+        l(:label_duration)
+      ]
+      #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
+      csv << headers.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+      issues.each{|issue|
+        # csv lines
+        @asignado_a=[]
+        @asignado_a=asignado_mas(issue.id)
+        @estado_a=[]
+        @estado_a= estado_mas(issue.id)
+        @issue = Issue.find(issue.id)
+        @maximo_journal_estado_asignado=max_journal_status(issue.id)
+        @valor_arreglo=@asignado_a.size
+        @valor_arreglo_estado=@estado_a.size
+        if @valor_arreglo>0
+          @first=@asignado_a.first
+          @asignado_a.each do |asignado|
+            if @maximo_journal_estado_asignado==asignado["jdID"]
+              @estado_final=estado_ultimo_asignado(asignado["issue_id"])
+              fields_old = [asignado["issue_id"],
+                @estado_final,
+                asignado["nombre_proyecto"],
+                asignado["new_state"],
+                asignado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                (Time.now).strftime("%m/%d/%Y %H:%M"),
+                "#{distance_of_time_in_words Time.parse(asignado["state_date_changed"]), Time.now}"
+              ]
+              csv << fields_old.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) } 
+            end
+            if asignado==@first and (asignado["fecha_inicio"].to_s.blank? and asignado["estado"].to_s.blank?)
+              fields = [asignado["issue_id"],
+                'Pendiente',
+                asignado["nombre_proyecto"],
+                asignado["old_state"],
+                (@issue.created_on).strftime("%m/%d/%Y %H:%M"),
+                asignado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                "#{distance_of_time_in_words @issue.created_on, Time.parse(asignado["state_date_changed"])}"
+              ]
+              csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }   
+            else
+              fields = [asignado["issue_id"],
+                asignado["estado"],
+                asignado["nombre_proyecto"],
+                asignado["old_state"],
+                asignado["fecha_inicio"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                asignado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                "#{distance_of_time_in_words Time.parse(asignado["fecha_inicio"]), Time.parse(asignado["state_date_changed"])}"
+              ]
+              csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }   
+            end
+          end         
+        end
+        
+        if  @valor_arreglo_estado>0
+          @first_asignado=@estado_a.first
+          @estado_a.each do |estado|
+            @issue = Issue.find estado["issue_id"]
+            if estado==@first_asignado and (estado["asignado"].blank? and estado["fecha_inicio"].blank?)
+              @usuario_inicial=asignado_primer_estado(estado["issue_id"])
+              @fecha_final_estado_inicial=fecha_fin_estado(estado["issue_id"])
+              fields_inicio = [estado["issue_id"],
+                estado["old_state"],
+                estado["nombre_proyecto"],
+                @usuario_inicial,
+                (@issue.created_on).strftime("%m/%d/%Y %H:%M"),
+                estado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                "#{distance_of_time_in_words @issue.created_on, Time.parse(estado["state_date_changed"])}"
+              ]             
+              csv << fields_inicio.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) } 
+            else
+              if @maximo_journal_estado_asignado==estado["jdID"]
+                fields_old_estado = [estado["issue_id"],
+                  estado["new_state"],
+                  estado["nombre_proyecto"],
+                  estado["asignado"],
+                  estado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                  (Time.now).strftime("%m/%d/%Y %H:%M"),
+                  "#{distance_of_time_in_words Time.parse(estado["state_date_changed"]), Time.now}"
+                ]
+                csv << fields_old_estado.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) } 
+              end
+              fields_estado = [estado["issue_id"],
+                estado["old_state"],
+                estado["nombre_proyecto"],
+                estado["asignado"],
+                estado["fecha_inicio"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                estado["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+                "#{distance_of_time_in_words Time.parse(estado["fecha_inicio"]), Time.parse(estado["state_date_changed"])}"
+              ]
+              csv << fields_estado.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }  
+            end
+          end
+        end
+      }
+    end
+    export
+  end
+  
+  
+  #Fin Requerimiento
 end
 
