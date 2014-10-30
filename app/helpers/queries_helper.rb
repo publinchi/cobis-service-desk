@@ -97,7 +97,7 @@ module QueriesHelper
       columns.delete_if {|column| column.name.to_s=='priority'} 
     else
       @cf=CustomField.find_by_id(62)
-      if @project.all_issue_custom_fields.include? (@cf)
+      if @project.all_issue_custom_fields.include? (@cf) and !@project.blank?
         columns.delete_if {|column| column.name.to_s=='cf_62'} 
       end
     end
@@ -114,7 +114,7 @@ module QueriesHelper
     end
     if User.current.client==false and @valor_index_cf.blank?
       @cf=CustomField.find_by_id(62)
-      if @project.all_issue_custom_fields.include? (@cf)
+      if @project.all_issue_custom_fields.include? (@cf) and !@project.blank?
         columns.insert(3,QueryCustomFieldColumn.new(@cf))
         columns.delete_if {|column| column.name.to_s=='priority'} 
       end
