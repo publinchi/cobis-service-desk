@@ -96,9 +96,11 @@ module QueriesHelper
     if User.current.client==true
       columns.delete_if {|column| column.name.to_s=='priority'} 
     else
-      @cf=CustomField.find_by_id(62)
-      if @project.all_issue_custom_fields.include? (@cf) and !@project.blank?
-        columns.delete_if {|column| column.name.to_s=='cf_62'} 
+      if !@project.blank?
+        @cf=CustomField.find_by_id(62)
+        if @project.all_issue_custom_fields.include? (@cf) 
+          columns.delete_if {|column| column.name.to_s=='cf_62'} 
+        end
       end
     end
     columns.reject(&:frozen?).collect {|column| [column.caption, column.name]}
@@ -113,10 +115,12 @@ module QueriesHelper
       columns.insert(3,QueryColumn.new(:priority, :sortable => "#{IssuePriority.table_name}.position", :default_order => 'desc', :groupable => true))
     end
     if User.current.client==false and @valor_index_cf.blank?
-      @cf=CustomField.find_by_id(62)
-      if @project.all_issue_custom_fields.include? (@cf) and !@project.blank?
-        columns.insert(3,QueryCustomFieldColumn.new(@cf))
-        columns.delete_if {|column| column.name.to_s=='priority'} 
+      if !@project.blank?
+        @cf=CustomField.find_by_id(62)
+        if @project.all_issue_custom_fields.include? (@cf)
+          columns.insert(3,QueryCustomFieldColumn.new(@cf))
+          columns.delete_if {|column| column.name.to_s=='priority'} 
+        end
       end
     end
     
