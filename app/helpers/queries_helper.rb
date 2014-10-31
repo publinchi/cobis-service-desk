@@ -94,13 +94,14 @@ module QueriesHelper
     current_user_allowed_to?(:view_responsable, columns, permissions[:view_responsable]) 
     current_user_allowed_to?(:is_private, columns, user_allowed_to_view_private_issues?(User.current.id, @project)) 
     if User.current.client==true
-      columns.delete_if {|column| column.name.to_s=='priority'} 
     else
       if !@project.blank?
         @cf=CustomField.find_by_id(62)
         if @project.all_issue_custom_fields.include? (@cf) 
           columns.delete_if {|column| column.name.to_s=='cf_62'} 
         end
+      else
+        columns.delete_if {|column| column.name.to_s=='priority'} 
       end
     end
     columns.reject(&:frozen?).collect {|column| [column.caption, column.name]}
@@ -121,6 +122,8 @@ module QueriesHelper
           columns.insert(3,QueryCustomFieldColumn.new(@cf))
           columns.delete_if {|column| column.name.to_s=='priority'} 
         end
+      else
+        columns.insert(3,QueryColumn.new(:priority, :sortable => "#{IssuePriority.table_name}.position", :default_order => 'desc', :groupable => true))
       end
     end
     
