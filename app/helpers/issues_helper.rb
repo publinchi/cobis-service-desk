@@ -510,7 +510,11 @@ module IssuesHelper
       case detail.property
       when 'attr', 'cf'
         if detail.old_value.present?
-          l(:text_journal_changed, :label => label, :old => old_value, :new => value).html_safe
+          if detail.prop_key.to_s=='112' or detail.prop_key.to_s=='82'
+            l(:text_journal_set_to, :label => label, :value => value).html_safe
+          else
+            l(:text_journal_changed, :label => label, :old => old_value, :new => value).html_safe
+          end
         elsif multiple
           l(:text_journal_added, :label => label, :value => value).html_safe
         else

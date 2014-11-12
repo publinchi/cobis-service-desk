@@ -38,6 +38,18 @@
             <% elsif !show_value(value).nil?%>
               <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
             <% end %>
+          <%elsif value.custom_field.id == 82%>
+            <%if @issue.status_id.to_i==15 or @issue.status_id.to_i==14 or @issue.status_id.to_i==16 or @issue.status_id.to_i==54 or @issue.status_id.to_i==19 or @issue.status_id.to_i==23 or @issue.status_id.to_i==44 or @issue.status_id.to_i==47%>
+              <p><%= custom_field_tag_with_label :issue, value %></p>
+            <%else%>
+              <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+            <%end%>
+          <%elsif value.custom_field.id == 112%>
+            <%if @issue.status_id.to_i==5 or @issue.status_id.to_i==16 or @issue.status_id.to_i==57 or @issue.status_id.to_i==24 or @issue.status_id.to_i==27 or @issue.status_id.to_i==44 or @issue.status_id.to_i==17%>
+              <p><%= custom_field_tag_with_label :issue, value %></p>
+            <%else%>
+              <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+            <%end%>
           <% else %>
             <p><%= custom_field_tag_with_label :issue, value %></p>
           <% end %>

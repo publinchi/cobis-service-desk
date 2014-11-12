@@ -244,6 +244,54 @@ order by 1)")
     end
   end
   
+  #Funciones reporte estados
+  def max_journal_assigned_user(jdID,id)
+    ActiveRecord::Base.connection.select_value("select value from journal_details where journal_id=(select max(journal_id) from journal_details where journal_id<#{jdID} and prop_key='assigned_to_id' and journal_id in (select id from journals where journalized_id=#{id})) and prop_key='assigned_to_id'")
+  end
+  
+  def by_custom_devoluciones(id)
+    ActiveRecord::Base.connection.select_all("select journal_id as \"jdID\", prop_key as \"custom_field_id\",value as \"valor\" from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and property='cf' and prop_key in ('23','36','82','112')")
+  end
+  
+  def by_custom_devoluciones_validacion(id)
+    ActiveRecord::Base.connection.select_all("select journal_id as \"jdID\", prop_key as \"custom_field_id\",value as \"valor\" from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and property='cf' and prop_key in ('23','36','82','112')
+union
+(select journal_id as \"jdID\",CAST(36 AS CHAR(4)),CAST(1 AS CHAR(4)) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='status_id' and value='17' order by 1  limit 1)")
+  end
+  
+  def ultimo_cambio_motivo_devolucion_cliente(jdID,custom_field,id,custom_field_2)
+    ActiveRecord::Base.connection.select_value("(select max(journal_id) from journal_details where journal_id in(
+select journal_id from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and property='cf' and prop_key in ('#{custom_field}') and journal_id>#{jdID} and 
+journal_id<(select min(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key=('#{custom_field_2}') and journal_id>#{jdID})
+))")
+  end
+  
+  def ultimo_cambio_motivo_devolucion_ultimo_registro(jdID,custom_field,id)
+    ActiveRecord::Base.connection.select_value("(select max(journal_id) from journal_details where journal_id in(
+select journal_id from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and property='cf' and prop_key in ('#{custom_field}') and journal_id>#{jdID}
+)) ")
+  end
+  
+  def valor_maximmo_motivos_devolucion(id,custom_field)
+    ActiveRecord::Base.connection.select_value("select max(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='#{custom_field}'")
+  end
+  
+  def valor_siguiente_devoluciones(id,custom_field,jdID)
+    ActiveRecord::Base.connection.select_value("select min(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and journal_id>#{jdID} and prop_key='#{custom_field}' ")
+  end
+  
+  def valor_inicial_devoluciones(id,custom_field)
+    ActiveRecord::Base.connection.select_value("select journal_id from journal_details where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='#{custom_field}' and value='1'")
+  end
+  
+  def valor_motivos_entre_estados(jdID,custom_field,id)
+    ActiveRecord::Base.connection.select_value("select value from journal_details where journal_id=
+(select max(journal_id) from journal_details where journal_id>#{jdID} and journal_id<
+(select min(journal_id) from journal_details where journal_id in(select id from journals where journalized_id=#{id}) and prop_key='status_id' and journal_id>#{jdID}) 
+and prop_key='#{custom_field}') 
+and prop_key='#{custom_field}'")
+  end
+  #Fin funciones
   def statuses_to_csv(issues, project = nil)
     #    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')
     encoding = l(:general_csv_encoding)
@@ -252,33 +300,74 @@ order by 1)")
       headers = [ "#",
         l(:field_status),
         l(:field_project),
+        "Asunto",
         "Asignado A",
-        "Fecha Inicio",
-        "Fecha Fin/Actual",
-        #        "Notas",
-        #        "Nota Publica",
-        l(:label_duration)
+        "Version Prevista",
+        "Creado",
+        "No. Devoluciones Interno",
+        "Motivo Devolucion", 
+        "No. Devoluciones Cliente",
+        "Motivo Devolucion Cliente"
       ]
       #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
       csv << headers.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+      
+      @cf=CustomField.find_by_id(36)
+      if @project.all_issue_custom_fields.include? (@cf)
+        @valor_proyecto_custom_devoluciones=1
+      end
+      
       issues.each{|issue|
         # csv lines
+        #variables para devoluciones
+        @custom_devuelto_by_id=by_custom_devoluciones(issue.id)
+        #Fin
+        
+        #Validacion en primer cambio de estado a Devuelta
+        if !@valor_proyecto_custom_devoluciones.blank?
+          @custom_devuelto_by_id=by_custom_devoluciones_validacion(issue.id)
+        else
+          @custom_devuelto_by_id=by_custom_devoluciones(issue.id)
+        end
+        #Fin
         
         @status_by_id = by_id(issue.id)
-        
         if @status_by_id.count>0
           @first=@status_by_id.first
           @status_by_id.each do |state|
+            @valor_devoluciones_internas=''
+            @valor_devoluciones_cliente=''
+            @motivo_devoluciones=''
+            @motivo_devoluciones_cliente=''
+            @version=''
             @issue = Issue.find state["issue_id"]
+            
+            #Version prevista
+            if !@issue.fixed_version_id.blank?
+              @version=Version.find(@issue.fixed_version_id).name
+            end
+            #Fin Version
+            ##Asunto
+            @asunto=@issue.subject
+            #Fin Asunto
+            #Creado
+            @creado=@issue.created_on
+            #Fin Creado
+            #
+            #Validacion primera devolucion
+            @journal_inicial_interno=valor_inicial_devoluciones(@issue.id,'23')
+            @journal_inicial_cliente=valor_inicial_devoluciones(@issue.id,'36')
+            #Fin
             
             s=@status_by_id.index(state)-1
             @jd=JournalDetail.find_by_journal_id_and_prop_key(state["jdID"],"assigned_to_id")
+            #Cuando solo hay cambio de estado sin cambio de asignado el jd es vacio
             if @jd.nil?
               @jd_extra=nil
             else
               @jd_extra=JournalDetail.find(@jd.id)
             end
-            
+              
             if state==@first
               @last = nil
               if @jd_extra.nil?
@@ -292,20 +381,62 @@ order by 1)")
                   @user=User.find(@jd_extra.old_value)
                 end
               end
+              #V-Devoluciones
+              if @custom_devuelto_by_id.count>0
+                @custom_devuelto_by_id.each do |state_devoluciones|
+                  if state_devoluciones["jdID"].to_s==state["jdID"].to_s
+                    case state_devoluciones["custom_field_id"].to_s
+                    when '23'
+                      if state_devoluciones["valor"].to_s!='0'
+                        @valor_devoluciones_internas=state_devoluciones["valor"]
+                      end
+                    when '36'
+                      if state_devoluciones["valor"].to_s!='0'
+                        @valor_devoluciones_cliente=state_devoluciones["valor"]
+                      end
+                    when '82'
+                      if state_devoluciones["jdID"].to_i>=@journal_inicial_interno.to_i
+                        @motivo_devoluciones=state_devoluciones["valor"]
+                      end
+                    when '112'
+                      if state_devoluciones["jdID"].to_i>=@journal_inicial_cliente.to_i
+                        @motivo_devoluciones_cliente=state_devoluciones["valor"]
+                      end
+                    end
+                  end
+                end
+              end
+              #Fin V-Devoluciones
+              if @valor_devoluciones_internas.blank?
+                @motivo_devoluciones=''
+              end
+              if @valor_devoluciones_cliente.blank?
+                @motivo_devoluciones_cliente=''
+              end
               fields = [state["issue_id"],
                 state["old_state"],
                 state["nombre_proyecto"],
+                @asunto,
                 "#{@user.firstname} #{@user.lastname}",
-                (@issue.created_on).strftime("%m/%d/%Y %H:%M"),
-                (state["state_date_changed"]).to_datetime.strftime("%m/%d/%Y %H:%M"),
-                #                state["notas"],
-                #                state["visible"],
-                "#{distance_of_time_in_words @issue.created_on, Time.parse(state["state_date_changed"])}"
+                @version,
+                @creado,
+                @valor_devoluciones_internas,
+                @motivo_devoluciones, 
+                @valor_devoluciones_cliente,
+                @motivo_devoluciones_cliente
               ]
             else
+              @valor_devoluciones_internas=''
+              @valor_devoluciones_cliente=''
+              @motivo_devoluciones=''
+              @motivo_devoluciones_cliente=''
+              @ultimo_journal_detail_interno=''
+              @ultimo_journal_detail_cliente=''
               if @jd_extra.nil?
-                @user = @last
-                if @user.nil?
+                @usuario_anterior_cambio_asignado=max_journal_assigned_user(state["jdID"],state["issue_id"])
+                if !@usuario_anterior_cambio_asignado.blank?
+                  @user=User.find(@usuario_anterior_cambio_asignado)
+                else
                   @user=User.find(numero_usuario(state["jdID"]))
                 end
               else
@@ -335,29 +466,89 @@ order by 1)")
                   @last = User.find(@last_id)
                 end
               end
-
+  
+              #V-Devoluciones
+              if @custom_devuelto_by_id.count>0
+                @custom_devuelto_by_id.each do |state_devoluciones|
+                  if state_devoluciones["jdID"].to_s==@status_by_id.at(s)["jdID"].to_s
+                    case state_devoluciones["custom_field_id"].to_s
+                    when '23'
+                      if state_devoluciones["valor"].to_s!='0'
+                        @valor_devoluciones_internas=state_devoluciones["valor"]
+                      end
+                    when '36'
+                      if state_devoluciones["valor"].to_s!='0'
+                        @valor_devoluciones_cliente=state_devoluciones["valor"]
+                      end
+                    when '82'
+                      if state_devoluciones["jdID"].to_i>=@journal_inicial_interno.to_i
+                        @valor_de_siguiente_devolucion=valor_siguiente_devoluciones(state["issue_id"],'23',state_devoluciones["jdID"])
+                        @valor_ultimo_motivo=valor_maximmo_motivos_devolucion(state["issue_id"],'82')
+                        if @valor_de_siguiente_devolucion.blank?
+                          @valor_motivo=JournalDetail.find_by_journal_id_and_prop_key(@valor_ultimo_motivo,'82').value
+                          @motivo_devoluciones=@valor_motivo
+                        else
+                          @ultimo_journal_detail_interno=ultimo_cambio_motivo_devolucion_cliente(state_devoluciones["jdID"],'82',state["issue_id"],'23')
+                          if !@ultimo_journal_detail_interno.blank?
+                            @valor_interno=JournalDetail.find_by_journal_id_and_prop_key(@ultimo_journal_detail_interno,'82').value
+                            @motivo_devoluciones=@valor_interno
+                          else
+                            @motivo_devoluciones=state_devoluciones["valor"]
+                          end
+                        end
+                      end
+                    when '112'
+                      if state_devoluciones["jdID"].to_i>=@journal_inicial_cliente.to_i
+                        @valor_de_siguiente_devolucion_cliente=valor_siguiente_devoluciones(state["issue_id"],'36',state_devoluciones["jdID"])
+                        @valor_ultimo_motivo_cliente=valor_maximmo_motivos_devolucion(state["issue_id"],'112')
+                        if @valor_de_siguiente_devolucion_cliente.blank?
+                          @valor_motivo_cliente=JournalDetail.find_by_journal_id_and_prop_key(@valor_ultimo_motivo_cliente,'112').value
+                          @motivo_devoluciones_cliente=@valor_motivo_cliente
+                        else
+                          @ultimo_journal_detail_cliente=ultimo_cambio_motivo_devolucion_cliente(state_devoluciones["jdID"],'112',state["issue_id"],'36')
+                          if !@ultimo_journal_detail_cliente.blank?
+                            @valor=JournalDetail.find_by_journal_id_and_prop_key(@ultimo_journal_detail_cliente,'112').value
+                            @motivo_devoluciones_cliente=@valor
+                          else
+                            @motivo_devoluciones_cliente=state_devoluciones["valor"]
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+              #Fin V-Devoluciones
+              if @valor_devoluciones_internas.blank?
+                @motivo_devoluciones=''
+              end
+              if @valor_devoluciones_cliente.blank?
+                @motivo_devoluciones_cliente=''
+              end
               fields = [state["issue_id"],
                 state["old_state"],
                 state["nombre_proyecto"],
+                @asunto,
                 "#{@user.firstname} #{@user.lastname}",
-                ((@status_by_id.at(s))["state_date_changed"]).to_datetime.strftime("%m/%d/%Y %H:%M"),
-                (state["state_date_changed"]).to_datetime.strftime("%m/%d/%Y %H:%M"),
-                #                state["notas"],
-                #                state["visible"],
-                "#{distance_of_time_in_words Time.parse((@status_by_id.at(s))["state_date_changed"]), Time.parse(state["state_date_changed"])}"
+                @version,
+                @creado,
+                @valor_devoluciones_internas,
+                @motivo_devoluciones,
+                @valor_devoluciones_cliente,
+                @motivo_devoluciones_cliente
               ]
             end
             #            csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
             csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
           end
-          
+            
           @jd=JournalDetail.find_by_journal_id_and_prop_key((@status_by_id.last)["jdID"],"assigned_to_id")
           if @jd.nil?
             @jd_extra = nil
           else
             @jd_extra = JournalDetail.find(@jd.id)
           end
-          
+            
           if @jd_extra.nil?
             @user = @last
             if @user.nil?
@@ -385,165 +576,64 @@ order by 1)")
               end
             end
           end
+          #V-Devoluciones
+          @valor_devoluciones_internas=''
+          @valor_devoluciones_cliente=''
+          @motivo_devoluciones=''
+          @motivo_devoluciones_cliente=''
+          @ultimo_journal_detail_interno=''
+          @ultimo_journal_detail=''
 
-          fields = [(@status_by_id.last)["issue_id"],
-            (@status_by_id.last)["new_state"],
-            (@status_by_id.last)["nombre_proyecto"],
-            "#{@user.firstname} #{@user.lastname}",
-            ((@status_by_id.last)["state_date_changed"]).to_datetime.strftime("%m/%d/%Y %H:%M"),
-            (Time.now).strftime("%m/%d/%Y %H:%M"),
-            #             (@status_by_id.last)["notas"],
-            #             (@status_by_id.last)["visible"],
-            "#{distance_of_time_in_words Time.parse((@status_by_id.last)["state_date_changed"]), Time.now}"
-          ]
-          #          csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-          csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
-          #lista de journal details que no tienen estado
-          @asignado_a=[]
-          @asignado_a=by_mas_mas(issue.id)
-          @fecha2=""
-          @valor2=@asignado_a.size
-          
-          if @valor2.to_s=='1'
-            @asignado_a.each do |param|
-              @asignado_c=by_mas(issue.id,param)
-              @asignado_c.each do |p1|
-                @otros=p1["new_state_estado"]
-                @usuario=otros_numero_usuario(param)
-                @otro_asignado=User.find(@usuario)
-                @fecha=p1["state_date_changed"]
-                if p1["new_state_estado"].blank?
-                  @otro=otro(issue.id)
-                  @otro.each do |p2|
-                    @otros='Pendiente'
-                    @otro_asignado=p2["new_state"]
+          if @custom_devuelto_by_id.count>0
+            @custom_devuelto_by_id.each do |state_devoluciones|
+              if state_devoluciones["jdID"].to_s==@status_by_id.last["jdID"].to_s
+                case state_devoluciones["custom_field_id"].to_s
+                when '23'
+                  @valor_devoluciones_internas=state_devoluciones["valor"]
+                when '36'
+                  @valor_devoluciones_cliente=state_devoluciones["valor"]
+                when '82'
+                  @ultimo_journal_detail_interno=ultimo_cambio_motivo_devolucion_ultimo_registro(state_devoluciones["jdID"],'82',@status_by_id.last["issue_id"])
+                  if !@ultimo_journal_detail_interno.blank?
+                    @valor_interno=JournalDetail.find_by_journal_id_and_prop_key(@ultimo_journal_detail_interno,'82').value
+                    @motivo_devoluciones=@valor_interno
+                  else
+                    @motivo_devoluciones=state_devoluciones["valor"]
                   end
-                end  
-              
-                @fecha2=fecha_anterior(p1["issue_id"], p1["id"])
-                if @fecha2.blank?
-                  @fecha2=@fecha
-                end
-              
-                fields = [p1["issue_id"],
-                  @otros,
-                  p1["nombre_proyecto"],
-                  @otro_asignado,
-                  @fecha2.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  @fecha.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  "#{distance_of_time_in_words Time.parse(@fecha2), Time.parse(@fecha)}"
-                ]
-                #                csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-                csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
-              end
-            end
-          else
-            @asignado_a.each do |param|
-              @asignado_c=by_mas(issue.id,param)
-              @asignado_c.each do |p1|
-                @otros=p1["new_state_estado"]
-                @otro_asignado=p1["new_state"]
-                @fecha=p1["state_date_changed"]
-                if p1["new_state_estado"].blank?
-                  @otro=otro(issue.id)
-                  @otro.each do |p2|
-                    @otros='Pendiente'
-                    @otro_asignado=p2["new_state"]
+                when '112'
+                  @ultimo_journal_detail=ultimo_cambio_motivo_devolucion_ultimo_registro(state_devoluciones["jdID"],'112',@status_by_id.last["issue_id"])
+                  if !@ultimo_journal_detail.blank?
+                    @valor=JournalDetail.find_by_journal_id_and_prop_key(@ultimo_journal_detail,'112').value
+                    @motivo_devoluciones_cliente=@valor
+                  else
+                    @motivo_devoluciones_cliente=state_devoluciones["valor"]
                   end
-                end  
-              
-                @fecha2=fecha_anterior(p1["issue_id"], p1["id"])
-                if @fecha2.blank?
-                  @fecha2=@fecha
-                end
-              
-                fields = [p1["issue_id"],
-                  @otros,
-                  p1["nombre_proyecto"],
-                  @otro_asignado,
-                  @fecha2.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  @fecha.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  "#{distance_of_time_in_words Time.parse(@fecha2), Time.parse(@fecha)}"
-                ]
-                #                csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-                csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+                end   
               end
             end
           end
-          #fin validacion
+          #Fin V-Devoluciones
+          if @valor_devoluciones_internas.blank?
+            @motivo_devoluciones=''
+          end
+          if @valor_devoluciones_cliente.blank?
+            @motivo_devoluciones_cliente=''
+          end
+          fields = [(@status_by_id.last)["issue_id"],
+            (@status_by_id.last)["new_state"],
+            (@status_by_id.last)["nombre_proyecto"],
+            @asunto,
+            "#{@user.firstname} #{@user.lastname}",
+            @version,
+            @creado,
+            @valor_devoluciones_internas,
+            @motivo_devoluciones,
+            @valor_devoluciones_cliente,
+            @motivo_devoluciones_cliente
+          ]
+          #          csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
+          csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
         else
-          #Validacion asignado
-          @asignado_a=[]
-          @asignado_a=by_mas_mas(issue.id)
-          @valor21=@asignado_a.size
-          if @valor21.to_s=='1'
-            @asignado_a.each do |param|
-              @asignado_c=by_mas(issue.id,param)
-              @asignado_c.each do |p1|
-                @otros=p1["new_state_estado"]
-                @usuario=otros_numero_usuario(param)
-                @otro_asignado=User.find(@usuario)
-                @fecha=p1["state_date_changed"]
-                if p1["new_state_estado"].blank?
-                  @otro=otro(issue.id)
-                  @otro.each do |p2|
-                    @otros='Pendiente'
-                    @otro_asignado=p2["new_state"]
-                  end
-                end  
-              
-                @fecha2=fecha_anterior(p1["issue_id"], p1["id"])
-                if @fecha2.blank?
-                  @fecha2=@fecha
-                end
-              
-                fields = [p1["issue_id"],
-                  @otros,
-                  p1["nombre_proyecto"],
-                  @otro_asignado,
-                  @fecha2.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  @fecha.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  "#{distance_of_time_in_words Time.parse(@fecha2), Time.parse(@fecha)}"
-                ]
-                #                csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-                csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
-              end
-            end
-          else
-            @asignado_a.each do |param|
-              @asignado_c=by_mas(issue.id,param)
-              @asignado_c.each do |p1|
-                @otros=p1["new_state_estado"]
-                @otro_asignado=p1["new_state"]
-                @fecha=p1["state_date_changed"]
-                if p1["new_state_estado"].blank?
-                  @otro=otro(issue.id)
-                  @otro.each do |p2|
-                    @otros='Pendiente'
-                    @otro_asignado=p2["new_state"]
-                  end
-                end  
-              
-                @fecha2=fecha_anterior(p1["issue_id"], p1["id"])
-                if @fecha2.blank?
-                  @fecha2=@fecha
-                end
-              
-                fields = [p1["issue_id"],
-                  @otros,
-                  p1["nombre_proyecto"],
-                  @otro_asignado,
-                  @fecha2.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  @fecha.to_datetime.strftime("%m/%d/%Y %H:%M"),
-                  "#{distance_of_time_in_words Time.parse(@fecha2), Time.parse(@fecha)}"
-                ]
-                #                csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
-                csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
-              end
-            end
-          end          
-          #fin validacion
-          
           i=Issue.find issue.id
           if (i.assigned_to_id).blank?
             @user_name = ""
@@ -567,7 +657,7 @@ order by 1)")
       }
     end
     export
-  end  
+  end 
 
   def distance_of_time_in_words(from_time, to_time = 0, include_seconds = false, options = {})
     from_time = from_time.to_time if from_time.respond_to?(:to_time)

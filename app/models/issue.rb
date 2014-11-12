@@ -618,6 +618,27 @@ class Issue < ActiveRecord::Base
         errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
       end
       
+      custom_field_values.each { |custom|  
+        if custom.custom_field_id.to_i== 82 && custom.value.blank? && 
+            ((@issue.status_id == 14 && self.status_id==16 ) ||
+              (@issue.status_id == 15 && (self.status_id==16 || self.status_id==14)) ||
+              (@issue.status_id == 19 && (self.status_id==16 || self.status_id==15)) ||
+              (@issue.status_id == 23 && (self.status_id==16 || self.status_id==19)) ||
+              (@issue.status_id == 54 && self.status_id==16 ) ||
+              (@issue.status_id == 44 && self.status_id==47))
+          @custom=CustomField.find(custom.custom_field_id)
+          errors.add(:base,"#{@custom.name.to_s} no puede estar en blanco." )
+        end  
+        
+        if (custom.custom_field_id.to_i==112 && custom.value.blank?) && 
+            ((@issue.status_id == 57 && self.status_id==24)||
+              (@issue.status_id == 5 && self.status_id==16) ||
+              (@issue.status_id == 27 && self.status_id==44))
+          @custom=CustomField.find(custom.custom_field_id)
+          errors.add(:base,"#{@custom.name.to_s} no puede estar en blanco." )
+        end
+      }
+      
       self.custom_values.each do |c|
         @custom_values_antes_guardar1.store c.custom_field_id, c.value
         #Validacion nota publica
@@ -1702,7 +1723,7 @@ class Issue < ActiveRecord::Base
           before = @custom_values_before_change[c.custom_field_id]
           after = c.value
           @custom_bdd = custom_valor(@issue.id,c.custom_field_id)
-          if (c.custom_field_id == 95 || c.custom_field_id == 23 || c.custom_field_id == 61 || c.custom_field_id == 74 || c.custom_field_id == 100 || c.custom_field_id == 105 || c.custom_field_id == 60 || c.custom_field_id == 12 || c.custom_field_id == 7)&& (@custom_bdd != @custom_values_before_change[c.custom_field_id]) && @custom_values_before_change[c.custom_field_id].blank?
+          if (c.custom_field_id == 36 || c.custom_field_id == 95 || c.custom_field_id == 23 || c.custom_field_id == 61 || c.custom_field_id == 74 || c.custom_field_id == 100 || c.custom_field_id == 105 || c.custom_field_id == 60 || c.custom_field_id == 12 || c.custom_field_id == 7)&& (@custom_bdd != @custom_values_before_change[c.custom_field_id]) && @custom_values_before_change[c.custom_field_id].blank?
             @current_journal.details << JournalDetail.new(:property => 'cf',
               :prop_key => c.custom_field_id,
               :old_value => @custom_values_before_change[c.custom_field_id],
@@ -1710,6 +1731,23 @@ class Issue < ActiveRecord::Base
             next
           end
 
+          if (((c.custom_field_id.to_i==112) && 
+                  ((@issue.status_id == 57 && self.status_id==24)||
+                    (@issue.status_id == 5 && self.status_id==16) ||
+                    (@issue.status_id == 27 && self.status_id==44)))||(c.custom_field_id.to_i== 82 && 
+                  ((@issue.status_id == 14 && self.status_id==16 ) ||
+                    (@issue.status_id == 15 && (self.status_id==16 || self.status_id==14)) ||
+                    (@issue.status_id == 19 && (self.status_id==16 || self.status_id==15)) ||
+                    (@issue.status_id == 23 && (self.status_id==16 || self.status_id==19)) ||
+                    (@issue.status_id == 54 && self.status_id==16) ||
+                    (@issue.status_id == 44 && self.status_id==47))))&&(@custom_bdd == @custom_values_before_change[c.custom_field_id]) 
+            @current_journal.details << JournalDetail.new(:property => 'cf',
+              :prop_key => c.custom_field_id,
+              :old_value => @custom_values_before_change[c.custom_field_id],
+              :value => @custom_bdd)
+            next
+          end
+          
           if (@custom_bdd != @custom_values_before_change[c.custom_field_id]) &&  !@custom_values_before_change[c.custom_field_id].blank?
             @current_journal.details << JournalDetail.new(:property => 'cf',
               :prop_key => c.custom_field_id,
