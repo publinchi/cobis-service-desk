@@ -68,11 +68,18 @@
       <% end %>
 
       <% if @issue.safe_attribute?('due_date') && User.current.allowed_to?(:due_date, @project) && User.current.allowed_to?(:edit_due_date, @project) %>
-        <p id="due_date_area">
-          <%= f.text_field(:due_date, :size => 10, :disabled => !@issue.leaf?,
-            :required => @issue.required_attribute?('due_date')) %>
-          <%= calendar_for('issue_due_date') if @issue.leaf? %>
-        </p>
+        <%if @issue.due_date.blank?%>
+          <p id="due_date_area">
+            <%= f.text_field(:due_date, :size => 10, :disabled => false,
+              :required => @issue.required_attribute?('due_date')) %>
+            <%= calendar_for('issue_due_date') if @issue.leaf? %>
+          </p>
+        <%else%>
+          <p id="due_date_area">
+            <%= f.text_field(:due_date, :size => 10, :disabled => true,
+              :required => @issue.required_attribute?('due_date')) %>
+          </p>
+        <%end%>
       <% end %>
 
       <% if @issue.safe_attribute?('estimated_hours') && User.current.allowed_to?(:estimated_hours, @project) && User.current.allowed_to?(:edit_estimated_hours, @project) %>
