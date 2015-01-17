@@ -392,7 +392,7 @@ and prop_key='#{custom_field}'")
                 end
               end
               #Asignacion de rol
-              member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+              member = Member.find_by_user_id_and_project_id(@user.id, @issue.project_id)
               member_roles = MemberRole.find_all_by_member_id(member)
               member_roles.each do |memberRole|
                 if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
@@ -492,7 +492,7 @@ and prop_key='#{custom_field}'")
                 end
               end
               #Asignacion de rol
-              member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+              member = Member.find_by_user_id_and_project_id(@user.id, @issue.project_id)
               member_roles = MemberRole.find_all_by_member_id(member)
               member_roles.each do |memberRole|
                 if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
@@ -616,7 +616,7 @@ and prop_key='#{custom_field}'")
           end
           #Asignacion de rol
           @rol_name=''
-          member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+          member = Member.find_by_user_id_and_project_id(@user.id, @issue.project_id)
           member_roles = MemberRole.find_all_by_member_id(member)
           member_roles.each do |memberRole|
             if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
@@ -688,21 +688,55 @@ and prop_key='#{custom_field}'")
           csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
         else
           i=Issue.find issue.id
+          #Version prevista
+          if !i.fixed_version_id.blank?
+            @version=Version.find(i.fixed_version_id).name
+          end
+          #Fin Version
+          ##Asunto
+          @asunto=i.subject
+          #Fin Asunto
+          #Creado
+          @creado=i.created_on
+          #Fin Creado
           if (i.assigned_to_id).blank?
             @user_name = ""
           else
             @user_name = (User.find i.assigned_to_id).name
           end
           @pro_i=nombre_proyecto_issues(i.id)
+          #Asignacion de rol
+          @rol_name=''
+          member = Member.find_by_user_id_and_project_id(@user.id, i.project_id)
+          member_roles = MemberRole.find_all_by_member_id(member)
+          member_roles.each do |memberRole|
+            if memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
+              rol = Role.find_by_id(memberRole.role_id)
+              @rol_name=rol.name
+            end
+          end
+          #Fin asignacion
+          #Devoluciones
+          @valor_devoluciones_internas=''
+          @valor_devoluciones_cliente=''
+          @motivo_devoluciones=''
+          @motivo_devoluciones_cliente=''
+          #Fin Dvoluciones
           fields = [i.id,
             (IssueStatus.find i.status_id).name,
             @pro_i,
+            @asunto,
             @user_name,
+            @rol_name,
+            @version,
+            @creado,
+            @valor_modulo,
+            @valor_modulo_aplicacion,
             (i.created_on).strftime("%m/%d/%Y %H:%M"),
-            (Time.now).strftime("%m/%d/%Y %H:%M"),
-            #            "",
-            #            "",
-            "#{distance_of_time_in_words i.created_on, Time.now}"
+            @valor_devoluciones_internas,
+            @motivo_devoluciones,
+            @valor_devoluciones_cliente,
+            @motivo_devoluciones_cliente
           ]
           #          csv << fields.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
           csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
