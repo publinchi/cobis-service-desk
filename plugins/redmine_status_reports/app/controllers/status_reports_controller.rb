@@ -302,8 +302,11 @@ and prop_key='#{custom_field}'")
         l(:field_project),
         "Asunto",
         "Asignado A",
+        "Rol",
         "Version Prevista",
         "Creado",
+        "Módulo",
+        "Módulo Aplicación",
         "Fecha Inicio",
         "No. Devoluciones Interno",
         "Motivo Devolucion", 
@@ -333,6 +336,11 @@ and prop_key='#{custom_field}'")
         #Fin
         
         @status_by_id = by_id(issue.id)
+        #Valor de modulo y modulo aplicacion cuando no se modifican los valores en los journals
+        @valor_modulo=CustomValue.find_by_customized_id_and_custom_field_id(issue.id,5)
+        @valor_modulo_aplicacion=CustomValue.find_by_customized_id_and_custom_field_id(issue.id,17)
+        #Fin valor de modulo
+
         if @status_by_id.count>0
           @first=@status_by_id.first
           @status_by_id.each do |state|
@@ -341,6 +349,7 @@ and prop_key='#{custom_field}'")
             @motivo_devoluciones=''
             @motivo_devoluciones_cliente=''
             @version=''
+            @rol_name=''
             @issue = Issue.find state["issue_id"]
             
             #Version prevista
@@ -382,6 +391,16 @@ and prop_key='#{custom_field}'")
                   @user=User.find(@jd_extra.old_value)
                 end
               end
+              #Asignacion de rol
+              member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+              member_roles = MemberRole.find_all_by_member_id(member)
+              member_roles.each do |memberRole|
+                if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
+                  rol = Role.find_by_id(memberRole.role_id)
+                  @rol_name=rol.name
+                end
+              end
+              #Fin asignacion
               #V-Devoluciones
               if @custom_devuelto_by_id.count>0
                 @custom_devuelto_by_id.each do |state_devoluciones|
@@ -419,8 +438,11 @@ and prop_key='#{custom_field}'")
                 state["nombre_proyecto"],
                 @asunto,
                 "#{@user.firstname} #{@user.lastname}",
+                @rol_name,
                 @version,
                 @creado,
+                @valor_modulo,
+                @valor_modulo_aplicacion,
                 @creado,
                 @valor_devoluciones_internas,
                 @motivo_devoluciones, 
@@ -434,6 +456,7 @@ and prop_key='#{custom_field}'")
               @motivo_devoluciones_cliente=''
               @ultimo_journal_detail_interno=''
               @ultimo_journal_detail_cliente=''
+              @rol_name=''
               if @jd_extra.nil?
                 @usuario_anterior_cambio_asignado=max_journal_assigned_user(state["jdID"],state["issue_id"])
                 if !@usuario_anterior_cambio_asignado.blank?
@@ -468,7 +491,16 @@ and prop_key='#{custom_field}'")
                   @last = User.find(@last_id)
                 end
               end
-  
+              #Asignacion de rol
+              member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+              member_roles = MemberRole.find_all_by_member_id(member)
+              member_roles.each do |memberRole|
+                if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
+                  rol = Role.find_by_id(memberRole.role_id)
+                  @rol_name=rol.name
+                end
+              end
+              #Fin asignacion
               #V-Devoluciones
               if @custom_devuelto_by_id.count>0
                 @custom_devuelto_by_id.each do |state_devoluciones|
@@ -532,8 +564,11 @@ and prop_key='#{custom_field}'")
                 state["nombre_proyecto"],
                 @asunto,
                 "#{@user.firstname} #{@user.lastname}",
+                @rol_name,
                 @version,
                 @creado,
+                @valor_modulo,
+                @valor_modulo_aplicacion,
                 ((@status_by_id.at(s))["state_date_changed"]).to_datetime.strftime("%m/%d/%Y %H:%M"),
                 @valor_devoluciones_internas,
                 @motivo_devoluciones,
@@ -579,6 +614,17 @@ and prop_key='#{custom_field}'")
               end
             end
           end
+          #Asignacion de rol
+          @rol_name=''
+          member = Member.find_by_user_id_and_project_id(@user.id, @project.id)
+          member_roles = MemberRole.find_all_by_member_id(member)
+          member_roles.each do |memberRole|
+            if memberRole.role_id.to_i==101 or memberRole.role_id.to_i==55 or memberRole.role_id.to_i==12 or memberRole.role_id.to_i==44 or memberRole.role_id.to_i==43 or memberRole.role_id.to_i==45 or memberRole.role_id.to_i==4 or memberRole.role_id.to_i==46 or memberRole.role_id.to_i==36 or memberRole.role_id.to_i==54 or memberRole.role_id.to_i==10 or memberRole.role_id.to_i==11
+              rol = Role.find_by_id(memberRole.role_id)
+              @rol_name=rol.name
+            end
+          end
+          #Fin asignacion
           #V-Devoluciones
           @valor_devoluciones_internas=''
           @valor_devoluciones_cliente=''
@@ -627,8 +673,11 @@ and prop_key='#{custom_field}'")
             (@status_by_id.last)["nombre_proyecto"],
             @asunto,
             "#{@user.firstname} #{@user.lastname}",
+            @rol_name,
             @version,
             @creado,
+            @valor_modulo,
+            @valor_modulo_aplicacion,
             (@status_by_id.last)["state_date_changed"].to_datetime.strftime("%m/%d/%Y %H:%M"),
             @valor_devoluciones_internas,
             @motivo_devoluciones,
