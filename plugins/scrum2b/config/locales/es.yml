@@ -1,8 +1,8 @@
 # English strings go here for Rails i18n
 en:
-  label_scrum2b: "Scrum"
+  label_scrum2b: "Kanban"
 
-  label_scrum2b_board: "Tablero Scrum"
+  label_scrum2b_board: "Tablero Kanban"
   label_scrum2b_list: "Sprint Backlogs"
   label_close_all_issues: "Cerrados"
   label_select_issues_all_working: "Todas las petiones en Trabajo"
