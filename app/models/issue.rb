@@ -1708,8 +1708,16 @@ class Issue < ActiveRecord::Base
       # attributes changes
       if @attributes_before_change
         (Issue.column_names - %w(id root_id lft rgt lock_version created_on updated_on closed_on)).each {|c|
-          before = @attributes_before_change[c]
-          after = send(c)
+          #          before = @attributes_before_change[c]
+          #          after = send(c)
+          # => Bug tiempo a facturar
+          if c.to_s=='estimated_hours'
+            before = "%0.02f" % @attributes_before_change[c].to_f
+            after = "%0.02f" % send(c).to_f
+          else
+            before = @attributes_before_change[c]
+            after = send(c)
+          end
           next if before == after || (before.blank? && after.blank?)
           @current_journal.details << JournalDetail.new(:property => 'attr',
             :prop_key => c,
