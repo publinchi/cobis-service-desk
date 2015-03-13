@@ -1,0 +1,6 @@
+<%= title [l(:label_contracted_hour_plural), contracted_hours_path], l(:label_contracted_hour_new_plural) %>
+
+<%= labelled_form_for @contracted_hour do |f| %>
+  <%= render :partial => 'form', :locals => { :f => f } %>
+  <%= f.submit l(:button_create) %>
+<% end %>

@@ -1,0 +1,62 @@
+<%= title l(:label_contracted_hour_detail) %>
+<% @casos = @contracted_hour.entire_issues %>
+<% @contracted_hours = ContractedHour.find_all_by_related_id @contracted_hour.id %>
+<% contracted_hour_related= []%>
+<% contracted_hour_related_ch= []%>
+<% @related_available_hours = 0%>
+<% @contracted_hours.each do |contracted_hour|%>
+  <% contracted_hour_related << contracted_hour%>
+<% end%>
+<%if contracted_hour_related.any?%>
+  <% contracted_hour_related.each do |contracted_hour|%>
+    <% if contracted_hour.related_id ==  @contracted_hour.id%>
+      <% @related_available_hours = @related_available_hours + contracted_hour.related_hours %>
+      <% contracted_hour_related_ch << contracted_hour.entire_issues%>
+    <% end%>
+  <% end%>
+  <% (@casos << contracted_hour_related_ch).flatten!%>
+<% end%>
+<h3>Horas Mensuales</h3>
+<h4>
+  <p><%= l(:label_contracted_plural) %>:  <%= html_hours(l_hours(@contracted_hour.hours)) %></p>
+  <% if @contracted_hour.hours.to_f >= (@contracted_hour.available_hours.to_f - @related_available_hours)&& ((@contracted_hour.available_hours.to_f - @related_available_hours) > 0) %>
+    <p><%= l(:label_available_plural) %>:  <%= html_hours(l_hours(@contracted_hour.available_hours - @related_available_hours)) %></p>
+    <p><%= l(:label_estimated_hours) %>: <%= "0 horas" %>
+    <% else %>
+    <p><%= l(:label_available_plural) %>: <%= "0 horas"%></p>
+    <p><%= l(:label_estimated_hours) %>: <%= html_hours(l_hours((@contracted_hour.available_hours - @related_available_hours).abs)) %></p>
+  <% end %>
+</h4>
+
+<% if @casos.any? %>
+  <table class="list groups">
+    <thead><tr>
+        <th><%=l(:label_issue)%></th>
+        <th><%=l(:label_project)%></th>
+        <th><%=l(:label_author)%></th>
+        <th><%=l(:label_status)%></th>
+        <th><%=l(:label_tracker)%></th>
+        <th><%=l(:label_create)%></th>
+        <th><%=l(:label_description)%></th>
+        <th><%=l(:label_spent_time)%></th>
+      </tr></thead>
+    <tbody>
+      <% @casos.each do |caso| %>
+        <tr class="<%= cycle 'odd', 'even' %>">
+          <td align="id"><%= link_to h(caso.id), issue_path(caso.id) %></td>
+          <td align="project"><%= link_to h(Project.find(caso.project_id)), project_path(caso.project_id) %></td>
+          <td align="center"><%= User.find(caso.author_id)%></td>
+          <td align="center"><%= IssueStatus.find(caso.status_id)%></td>
+          <td align="center"><%= Tracker.find(caso.tracker_id)%></td>
+          <td align="center"><%= caso.created_on.to_s.first(19) %></td>
+          <td class="name"><%= caso.subject %></td>
+          <td align="center"><%= @contracted_hour.month_time_entries(caso.id)%></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= link_to(l(:label_export), { :controller => 'contracted_hours', :action => 'export_csv', :issues => @casos, :contracted_hour => @contracted_hour, :project => @project}, :data => {:confirm => l(:text_are_you_sure)}, :method => :post, :class => 'icon icon-time-add') %>
+
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

@@ -1,0 +1,21 @@
+<%= javascript_include_tag 'jquery-1.4.min.js', :plugin => 'redmine_contracted_hours' %>
+<%= javascript_include_tag 'jquery.jqcanvas-modified.js', :plugin => 'redmine_contracted_hours' %>
+<%= javascript_include_tag 'jquery.speedometer.js.erb', :plugin => 'redmine_contracted_hours' %>
+<%= javascript_include_tag 'excanvas-modified.js', :plugin => 'redmine_contracted_hours' %>
+<h3><center><%= l(:label_percentage_available_hours) %></center> </h3>
+<% @related_available_hours = 0%>
+<%if contracted_hour_related.any?%>
+  <% contracted_hour_related.each do |contracted_hour|%>
+    <% if contracted_hour.related_id ==  @contracted_hour.id%>
+      <% @related_available_hours = @related_available_hours + contracted_hour.related_hours %>
+    <% end%>
+  <% end%>
+<% end%>
+<center><div id="test">
+<%=@contracted_hour.porcentaje_horas(@contracted_hour.hours, (@contracted_hour.available_hours - @related_available_hours))%></div></center>
+
+<%= javascript_tag do %>
+  $(function(){
+  $('#test').speedometer();
+  });
+<% end %>

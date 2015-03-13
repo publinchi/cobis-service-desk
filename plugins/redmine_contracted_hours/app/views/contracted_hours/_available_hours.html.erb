@@ -1,0 +1,23 @@
+<h3><%= @contracted_hour_available.name%></h3>
+<h4><%= l(:label_monthly_hours) %> <i><%= l(:label_contracted_plural) %></i> </h4>
+<p><span class="icon icon-time"><%= html_hours(l_hours(@contracted_hour_available.hours)) %></span></p>
+<h4><%= l(:label_monthly_hours) %> <i><%= l(:label_available_plural) %></i></h4>
+<% available_hours = @contracted_hour_available.available_hours %>
+<% @related_available_hours = 0%>
+<%if contracted_hour_related.any?%>
+  <% contracted_hour_related.each do |contracted_hour|%>
+    <% if contracted_hour.related_id ==  @contracted_hour_available.id%>
+      <% @related_available_hours = @related_available_hours + contracted_hour.related_hours %>
+    <% end%>
+  <% end%>
+  <%available_hours = available_hours - @related_available_hours %>
+<% end%>
+<% color = @contracted_hour_available.contracted_hour_color(available_hours, @contracted_hour_available) %>
+<p><span class="icon icon-time"><font color="<%= "#{color}" %>"><%= l_hours(available_hours.abs) %></font></p></span>
+
+<% if color == 'red' %>
+  <font color="<%= "#{color}" %>">
+  <b>NOTA:</b> Al momento se ha superado el límite de horas contratadas;<br/>
+  a partir de este momento se procederá a facturar el excedente.
+  </font></p></span>
+<% end %>

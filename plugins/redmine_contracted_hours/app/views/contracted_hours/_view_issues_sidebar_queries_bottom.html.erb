@@ -1,0 +1,24 @@
+<% @contracted_hours = ContractedHour.find_all_by_project_id @project.id %>
+
+<% contracted_hour_principal=[] %>
+<% contracted_hour_related_tmp= []%>
+<% contracted_hour_related= []%>
+<% @contracted_hours.each do |contracted_hour|%>
+  <% if !contracted_hour.related_id.nil?%>
+    <% contracted_hour_related_tmp << contracted_hour%>
+  <% else%>
+    <% contracted_hour_principal << contracted_hour%>
+  <% end%>
+<% end%>
+
+<% if contracted_hour_principal.any? %>
+  <% contracted_hour_principal.each do |contracted_hour_p|%>
+    <% @contracted_hour_available= contracted_hour_p%>
+    <% contracted_hour_related = ContractedHour.find_all_by_related_id  @contracted_hour_available.id%>
+    <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related=>contracted_hour_related} %>
+  <% end%>
+<%elsif  !contracted_hour_principal.any? && contracted_hour_related_tmp.length >= 1 %>
+  <%@contracted_hour_available = ContractedHour.find( contracted_hour_related_tmp[0].related_id)%>
+  <% contracted_hour_related = ContractedHour.find_all_by_related_id  @contracted_hour_available.id%>
+  <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related=>contracted_hour_related} %>
+<% end%>

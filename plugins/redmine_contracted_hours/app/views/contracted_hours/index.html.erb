@@ -1,0 +1,30 @@
+<%if User.current.admin%>
+  <div class="contextual">
+    <%= link_to l(:label_contracted_hour_new_plural), new_contracted_hour_path, :class => 'icon icon-add' %>
+  </div>
+
+  <%= title l(:label_contracted_hour_plural) %>
+
+  <% if @contracted_hours.any? %>
+    <table class="list groups">
+      <thead><tr>
+          <th><%=l(:label_project)%></th>
+          <th><%=l(:label_name)%></th>
+          <th><%=l(:label_mensual_hour_plural)%></th>
+          <th></th>
+        </tr></thead>
+      <tbody>
+        <% @contracted_hours.each do |contracted_hour| %>
+          <tr class="<%= cycle 'odd', 'even' %>">
+            <td class="name"><%= Project.find(contracted_hour.project_id) %></td>
+            <td class="name"><%= link_to h(contracted_hour.name), edit_contracted_hour_path(contracted_hour) %></td>
+            <td><%= contracted_hour.hours %></td>
+            <td class="buttons"><%= delete_link contracted_hour %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="nodata"><%= l(:label_no_data) %></p>
+  <% end %>
+<% end %> 

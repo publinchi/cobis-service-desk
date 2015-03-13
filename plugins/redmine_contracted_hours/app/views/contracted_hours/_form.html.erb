@@ -1,0 +1,49 @@
+<%= error_messages_for 'contracted_hour' %>
+<%= error_messages_for 'query' %>
+
+<div class="box">
+  <div class="tabular">
+    <% if @contracted_hour.new_record? %>
+      <p><%= f.text_field :name, :required => true, :size => 60 %></p>
+      <p><%= f.select :project_id, options_for_membership_project_select(@user, @projects), {:required => true},
+          :onchange => "updateContractedHourFrom('#{escape_javascript contracted_hour_form_path(@project, :id => @issue, :name => 'status_id', :format => 'js')}')"%> </p>
+    <% else %>
+      <h3 class="center"><p><%= @contracted_hour.name%></p></h3>
+    <% end %>
+    <p><%= f.text_field :hours, :size => 20  %></p>
+    <% if @contracted_hours.any? %>
+      <p><%=f.select :related_id, (@contracted_hours.collect {|c| [c.name, c.id]}), :include_blank => true%></p>
+    <% end %> 
+  </div>
+
+  <fieldset id="filters"><legend><%= l(:label_filter_plural) %></legend>
+    <div id="filters_id">
+      <%= render :partial => 'queries/filters', :locals => {:query => @query}%>
+    </div>
+  </fieldset>
+</div>
+
+<%= javascript_tag do %>
+  function updateContractedHourFrom(url) {
+  $('#all_attributes input, #all_attributes textarea, #all_attributes select').each(function(){
+  $(this).data('valuebeforeupdate', $(this).val());
+  });
+  $.ajax({
+  url: url,
+  type: 'post',
+  data: $('#new_contracted_hour').serialize()
+  });
+  }
+
+  function replaceFilterFormWith(html){
+  var replacement = $(html);
+  $('#all_attributes input, #all_attributes textarea, #all_attributes select').each(function(){
+  var object_id = $(this).attr('id');
+  if (object_id && $(this).data('valuebeforeupdate')!=$(this).val()) {
+  replacement.find('#'+object_id).val($(this).val());
+  }
+  });
+  $('#filters_id').empty();
+  $('#filters_id').prepend(replacement);
+  }
+<% end %>
