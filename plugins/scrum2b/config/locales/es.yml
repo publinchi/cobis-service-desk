@@ -1,6 +1,6 @@
 # English strings go here for Rails i18n
 en:
-  label_scrum2b: "Kanban"
+  label_scrum2b: "Ágil"
 
   label_scrum2b_board: "Tablero Kanban"
   label_scrum2b_list: "Sprint Backlogs"

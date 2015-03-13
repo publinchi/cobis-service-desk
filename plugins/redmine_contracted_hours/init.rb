@@ -14,5 +14,5 @@ end
 
 
 
-require_dependency 'issues_sidebar_contracted_hour_hook'
+
 require_dependency 'projects_sidebar_contracted_hour_hook'
