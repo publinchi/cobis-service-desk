@@ -265,7 +265,7 @@ class ContractedHour < ActiveRecord::Base
   def porcentaje_horas(contratadas, disponibles)
     porcentaje = (disponibles.to_f * 100)/contratadas.to_f
     if (porcentaje > 0)
-      return porcentaje.to_i
+      return porcentaje.round
     else
       return 0
     end

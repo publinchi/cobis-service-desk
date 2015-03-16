@@ -29,6 +29,7 @@
 <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related => contracted_hour_related} %>
 <h3><center><%= l(:label_percentage_available_hours) %></center> </h3>
 <center><div id="test1"><%=@contracted_hour[1].porcentaje_horas(@contracted_hour[1].hours, (@contracted_hour[1].available_hours - @related_available_hours))%></div></center>
+
 <%= link_to(l(:label_details), contracted_hour_time_entries_path(:contracted_hour => @contracted_hour[1], :project => @project)) %> |
 
 <%= javascript_tag do %>
