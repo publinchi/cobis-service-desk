@@ -38,6 +38,7 @@
         <th><%=l(:label_tracker)%></th>
         <th><%=l(:label_create)%></th>
         <th><%=l(:label_description)%></th>
+        <th><%=l(:label_estimated_hours)%></th>
         <th><%=l(:label_spent_time)%></th>
       </tr></thead>
     <tbody>
@@ -48,8 +49,13 @@
           <td align="center"><%= User.find(caso.author_id)%></td>
           <td align="center"><%= IssueStatus.find(caso.status_id)%></td>
           <td align="center"><%= Tracker.find(caso.tracker_id)%></td>
-          <td align="center"><%= caso.created_on.to_s.first(19) %></td>
+          <td align="center"><%= caso.created_on.to_s.first(19) %></td>           
           <td class="name"><%= caso.subject %></td>
+          <%if !caso.estimated_hours.nil? and (caso.estimated_hours > 0.00)%>
+          <td align="center"><%= caso.estimated_hours %></td>
+           <%else%>
+            <td align="center"><%= 0.0 %></td>
+          <%end%>
           <td align="center"><%= @contracted_hour.month_time_entries(caso.id)%></td>
         </tr>
       <% end %>

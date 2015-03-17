@@ -50,6 +50,7 @@ class ContractedHoursController < ApplicationController
         l(:label_tracker),
         l(:label_create),
         l(:label_description),
+        l(:label_estimated_hours),
         l(:label_spent_time)
       ]
       #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
@@ -63,7 +64,8 @@ class ContractedHoursController < ApplicationController
           Tracker.find(issue.tracker_id),
           issue.created_on,
           issue.subject,
-          ContractedHour.new.month_time_entries(issue.id),
+          ContractedHour.new.clear_estimated_hour(issue),
+          ContractedHour.new.month_time_entries(issue.id)
           ]
         csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
       }

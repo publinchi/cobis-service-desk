@@ -1,7 +1,9 @@
 <h3><%= @contracted_hour_available.name%></h3>
 <h4><%= l(:label_monthly_hours) %> <i><%= l(:label_contracted_plural) %></i> </h4>
 <p><span class="icon icon-time"><%= html_hours(l_hours(@contracted_hour_available.hours)) %></span></p>
+<%if User.current.client == false %>
 <h4><%= l(:label_monthly_hours) %> <i><%= l(:label_available_plural) %></i></h4>
+<% end%>
 <% available_hours = @contracted_hour_available.available_hours %>
 <% @related_available_hours = 0%>
 <%if contracted_hour_related.any?%>
@@ -13,8 +15,9 @@
   <%available_hours = available_hours - @related_available_hours %>
 <% end%>
 <% color = @contracted_hour_available.contracted_hour_color(available_hours, @contracted_hour_available) %>
+<%if User.current.client == false %>
 <p><span class="icon icon-time"><font color="<%= "#{color}" %>"><%= html_hours(l_hours(available_hours)) %></font></p></span>
-
+<% end %>
 <% if color == 'red' %>
   <font color="<%= "#{color}" %>">
   <b>NOTA:</b> El límite de horas mensuales contratadas fue superado.

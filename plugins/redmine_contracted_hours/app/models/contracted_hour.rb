@@ -225,7 +225,7 @@ class ContractedHour < ActiveRecord::Base
   # Returns the issues ids
   def issue_ids(options={})
     # Issue.
-         Issue.visible.
+    Issue.visible.
       joins(:status, :project).
       where(statement).
       find_ids
@@ -233,7 +233,7 @@ class ContractedHour < ActiveRecord::Base
     raise StatementInvalid.new(e.message)
   end
   
-    #devuelve todo el objeto issue
+  #devuelve todo el objeto issue
   def entire_issues
     Issue.find(:all,:conditions => ["id in (?)", issue_ids ])
   end
@@ -244,10 +244,10 @@ class ContractedHour < ActiveRecord::Base
 
     @valor=0
     if !issue_ids.nil?
-    @valor=self.hours.to_f - TimeEntry.select("hours").where(:issue_id => issue_ids, :tyear => time.year, :tmonth => time.month).map(&:hours).inject(0, :+)
+      @valor=self.hours.to_f - TimeEntry.select("hours").where(:issue_id => issue_ids, :tyear => time.year, :tmonth => time.month).map(&:hours).inject(0, :+)
     end
     return  @valor
-    end
+  end
   
   def month_time_entries(issue)
     time = Time.new
@@ -259,6 +259,16 @@ class ContractedHour < ActiveRecord::Base
     # suma de horas de tiempo dedicado
     @total_hours= 0+ TimeEntry.select("hours").where(:issue_id => issue_ids, :tyear => time.year, :tmonth => time.month).map(&:hours).inject(0, :+)
     return @total_hours
+  end
+  
+  def clear_estimated_hour(caso)
+    @tiempo_facturar = 0
+    if !caso.estimated_hours.nil? and caso.estimated_hours > 0.00
+     @tiempo_facturar= caso.estimated_hours
+    else
+     @tiempo_facturar= 0.0 
+    end
+    return @tiempo_facturar
   end
  
   

@@ -22,16 +22,18 @@
     <% contracted_hour_related = ContractedHour.find_all_by_related_id @contracted_hour.id%>
     <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related => contracted_hour_related} %>
     <%= render :partial => 'contracted_hours/percentage_hours', :locals => {:contracted_hour => @contracted_hour, :contracted_hour_related => contracted_hour_related} %>
-    <%= link_to(l(:label_details), contracted_hour_time_entries_path(:contracted_hour => @contracted_hour, :project => @project, :contracted_hour_related => contracted_hour_related)) %> |
-
+    <%if User.current.client == false %>
+      <%= link_to(l(:label_details), contracted_hour_time_entries_path(:contracted_hour => @contracted_hour, :project => @project, :contracted_hour_related => contracted_hour_related)) %> |
+    <% end %>
   <%elsif  !contracted_hour_principal.any? && contracted_hour_related_tmp.length >= 1 %>
     <%@contracted_hour = ContractedHour.find( contracted_hour_related_tmp[0].related_id)%>
-    
+
     <%@contracted_hour_available = ContractedHour.find( contracted_hour_related_tmp[0].related_id)%>
     <% contracted_hour_related = ContractedHour.find_all_by_related_id @contracted_hour.id%>
-      <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related => contracted_hour_related} %>
-      <%= render :partial => 'contracted_hours/percentage_hours', :locals => {:contracted_hour => @contracted_hour, :contracted_hour_related => contracted_hour_related} %>
+    <%= render :partial => 'contracted_hours/available_hours', :locals => {:contracted_hour_available => @contracted_hour_available, :contracted_hour_related => contracted_hour_related} %>
+    <%= render :partial => 'contracted_hours/percentage_hours', :locals => {:contracted_hour => @contracted_hour, :contracted_hour_related => contracted_hour_related} %>
+    <%if User.current.client == false %>
       <%= link_to(l(:label_details), contracted_hour_time_entries_path(:contracted_hour => @contracted_hour, :project => @project, :contracted_hour_related => contracted_hour_related)) %> |
-
+    <% end %>
   <% end %>
 <% end %>
