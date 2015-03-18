@@ -224,8 +224,8 @@ class ContractedHour < ActiveRecord::Base
   
   # Returns the issues ids
   def issue_ids(options={})
-    # Issue.
-    Issue.visible.
+    #Issue.visible.
+    Issue.
       joins(:status, :project).
       where(statement).
       find_ids
