@@ -55,7 +55,11 @@
             <!--Fin de validacion sin valor -->
             <!--Valida que si tiene valor, no se presente el campo (Validacion con valor)-->
             <%if !show_value(value).nil?%>
-              <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+              <%if User.current.allowed_to?(:edit_unica_vez, @project)%>
+                <p><%= custom_field_tag_with_label :issue, value %></p>
+              <%else%>
+                <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
+              <%end%>
             <%end%>
             <!--Fin de validacion con valor -->
           <% else %>

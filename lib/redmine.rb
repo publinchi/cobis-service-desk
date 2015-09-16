@@ -151,6 +151,8 @@ Redmine::AccessControl.map do |map|
     #Actualizacion sin cambio de fecha
     map.permission :edit_issues_update, {:issues => [:edit, :update, :edit_extra, :update_extra, :bulk_edit, :bulk_update, :update_form, :get_assignable_users], :journals => [:new]}
     map.permission :add_issue_notes_update, {:issues => [:edit, :update, :edit_extra, :update_extra, :get_assignable_users], :journals => [:new]}
+    #Agregar permiso unica vez
+    map.permission :edit_unica_vez, {} 
   end
 
   map.project_module :time_tracking do |map|

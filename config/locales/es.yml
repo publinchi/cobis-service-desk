@@ -1193,3 +1193,4 @@ es:
   setting_force_default_language_for_loggedin: Forzar lenguaje por defecto para usuarios identificados
   label_custom_field_select_type: Seleccione el tipo de objeto al que unir el campo personalizado
   field_ingreso: Unica vez
+  permission_edit_unica_vez: Modificar fechas registradas unica vez
