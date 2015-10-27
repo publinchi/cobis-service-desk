@@ -32,10 +32,23 @@
             <div class="splitcontentright">
               <p><%= time_entry.select :activity_id, activity_collection_for_select_options, :required => true %></p>
             </div>
-            <p><%= time_entry.text_field :comments, :size => 60 %></p>
-            <% @time_entry.custom_field_values.each do |value| %>
-              <p><%= custom_field_tag_with_label :time_entry, value %></p>
-            <% end %>
+            <p><%= time_entry.text_field :comments, :size => 60, :required => true %></p>
+            <%if @nuevo_desarrollo.to_s.to_i==1%>
+              <% @time_entry.custom_field_values.each do |value| %>
+                <%if @issue.tracker_id.to_i==2%>
+                  <p><%= custom_field_label_tag :time_entry, value %> 
+                    <input id="time_entry_custom_field_values_128" name="time_entry[custom_field_values][128]" type="radio" value="0" checked="true">
+                    <span style="display:inline-block; width:10px;">No</span>
+                  </p>
+                <%else%>
+                  <p><%= custom_field_tag_with_label :time_entry, value %></p>
+                <%end%>
+              <% end %>
+            <%else%>
+              <% @time_entry.custom_field_values.each do |value| %>
+                <input id="time_entry_custom_field_values_128" name="time_entry[custom_field_values][128]" type="radio" value="0" checked="true" style="display:none;">
+              <%end%>
+            <%end%>
           <% end %>
         <% elsif @validator_a == 0 && !@validator_a.blank? %>
           <% @not_permited = 2 %>

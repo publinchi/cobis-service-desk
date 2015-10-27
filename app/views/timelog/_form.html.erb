@@ -15,18 +15,31 @@
   </p>
   <p><%= f.text_field :spent_on, :size => 10, :required => true %><%= calendar_for('time_entry_spent_on') %></p>
   <p><%= f.text_field :hours, :size => 6, :required => true %></p>
-  <p><%= f.text_field :comments, :size => 100, :maxlength => 255 %></p>
+  <p><%= f.text_field :comments, :size => 100, :maxlength => 255, :required => true %></p>
   <p><%= f.select :activity_id, activity_collection_for_select_options(@time_entry), :required => true %></p>
-  <% @time_entry.custom_field_values.each do |value| %>
-    <p><%= custom_field_tag_with_label :time_entry, value %></p>
-  <% end %>
+  <%if @nuevo_desarrollo.to_s.to_i==1%>
+    <% @time_entry.custom_field_values.each do |value| %>
+      <%if @time_entry.issue.tracker.id.to_i==2%>
+        <p><%= custom_field_label_tag :time_entry, value %> 
+          <input id="time_entry_custom_field_values_128" name="time_entry[custom_field_values][128]" type="radio" value="0" checked="true">
+          <span style="display:inline-block; width:10px;">No</span>
+        </p>
+      <%else%>
+        <p><%= custom_field_tag_with_label :time_entry, value %></p>
+      <%end%>
+    <% end %>
+  <%else%>
+    <% @time_entry.custom_field_values.each do |value| %>
+      <input id="time_entry_custom_field_values_128" name="time_entry[custom_field_values][128]" type="radio" value="0" checked="true" style="display:none;">
+    <%end%>
+  <%end%>
   <%= call_hook(:view_timelog_edit_form_bottom, { :time_entry => @time_entry, :form => f }) %>
 </div>
 
 <%= javascript_tag do %>
   observeAutocompleteField('time_entry_issue_id', '<%= escape_javascript auto_complete_issues_path(:project_id => @project, :scope => (@project ? nil : 'all'))%>', {
-    select: function(event, ui) {
-      $('#time_entry_issue').text(ui.item.label);
-    }
+  select: function(event, ui) {
+  $('#time_entry_issue').text(ui.item.label);
+  }
   });
 <% end %>

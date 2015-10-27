@@ -75,10 +75,18 @@
             <%= calendar_for('issue_due_date') if @issue.leaf? %>
           </p>
         <%else%>
-          <p id="due_date_area">
-            <%= f.text_field(:due_date, :size => 10, :disabled => true,
-              :required => @issue.required_attribute?('due_date')) %>
-          </p>
+          <%if User.current.allowed_to?(:edit_unica_vez, @project)%>
+            <p id="due_date_area">
+              <%= f.text_field(:due_date, :size => 10, :disabled => false,
+                :required => @issue.required_attribute?('due_date')) %>
+              <%= calendar_for('issue_due_date') if @issue.leaf? %>
+            </p>        
+          <%else%>
+            <p id="due_date_area">
+              <%= f.text_field(:due_date, :size => 10, :disabled => true,
+                :required => @issue.required_attribute?('due_date')) %>
+            </p>
+          <%end%>
         <%end%>
       <% end %>
 

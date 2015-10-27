@@ -88,6 +88,10 @@ class TimelogController < ApplicationController
     end
   end
 
+  def valor_estimated_hours(id)
+    ActiveRecord::Base.connection.execute("select new_estimated_hours(#{id})")
+  end
+  
   def show
     respond_to do |format|
       # TODO: Implement html response
@@ -97,17 +101,22 @@ class TimelogController < ApplicationController
   end
 
   def new
+    #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+    @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@project.id,129)
     @time_entry ||= TimeEntry.new(:project => @project, :issue => @issue, :user => User.current, :spent_on => User.current.today)
     @time_entry.safe_attributes = params[:time_entry]
   end
 
   def create
+    #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+    @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@project.id,129)
     @time_entry ||= TimeEntry.new(:project => @project, :issue => @issue, :user => User.current, :spent_on => User.current.today)
     @time_entry.safe_attributes = params[:time_entry]
 
     call_hook(:controller_timelog_edit_before_save, { :params => params, :time_entry => @time_entry })
 
     if @time_entry.save
+      valor_estimated_hours(@issue.id) if @issue.tracker_id.to_s!='2'
       respond_to do |format|
         format.html {
           flash[:notice] = l(:notice_successful_create)
@@ -144,6 +153,8 @@ class TimelogController < ApplicationController
   end
 
   def edit
+    #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+    @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@project.id,129)
     @time_entry.safe_attributes = params[:time_entry]
   end
 
@@ -153,6 +164,7 @@ class TimelogController < ApplicationController
     call_hook(:controller_timelog_edit_before_save, { :params => params, :time_entry => @time_entry })
 
     if @time_entry.save
+      valor_estimated_hours(@time_entry.issue_id) if Issue.find(@time_entry.issue_id).tracker_id.to_s!='2'
       respond_to do |format|
         format.html {
           flash[:notice] = l(:notice_successful_update)
@@ -197,6 +209,7 @@ class TimelogController < ApplicationController
         unless t.destroy && t.destroyed?
           raise ActiveRecord::Rollback
         end
+        valor_estimated_hours(t.issue_id)
       end
     end
 
@@ -219,7 +232,7 @@ class TimelogController < ApplicationController
     end
   end
 
-private
+  private
   def find_time_entry
     @time_entry = TimeEntry.find(params[:id])
     unless @time_entry.editable_by?(User.current)
@@ -245,9 +258,9 @@ private
       flash[:notice] = l(:notice_successful_update) unless time_entries.empty?
     else
       flash[:error] = l(:notice_failed_to_save_time_entries,
-                        :count => unsaved_time_entry_ids.size,
-                        :total => time_entries.size,
-                        :ids => '#' + unsaved_time_entry_ids.join(', #'))
+        :count => unsaved_time_entry_ids.size,
+        :total => time_entries.size,
+        :ids => '#' + unsaved_time_entry_ids.join(', #'))
     end
   end
 

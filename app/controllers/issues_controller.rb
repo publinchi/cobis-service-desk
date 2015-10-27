@@ -52,6 +52,11 @@ class IssuesController < ApplicationController
   helper :timelog
   include Redmine::Export::PDF
 
+  #funcion para calcular tiempo facturable por time_entrie
+  def valor_estimated_hours(id)
+    ActiveRecord::Base.connection.execute("select new_estimated_hours(#{id})")
+  end
+  
   def index
     retrieve_query
     sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
@@ -124,7 +129,9 @@ class IssuesController < ApplicationController
     @priorities = IssuePriority.active
     @time_entry = TimeEntry.new(:issue => @issue, :project => @issue.project)
     @relation = IssueRelation.new
-
+    #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+    @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@issue.project_id,129)
+    
     respond_to do |format|
       format.html {
         retrieve_previous_and_next_issue_ids
@@ -176,7 +183,8 @@ class IssuesController < ApplicationController
 
   def edit
     return unless update_issue_from_params
-
+    #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+    @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@issue.project_id,129)
     respond_to do |format|
       format.html { }
       format.xml  { }
@@ -216,6 +224,7 @@ class IssuesController < ApplicationController
 
     if saved
       fecha_actualizacion(@issue.id, @fecha_antes) if @valor_fecha.to_s=='1'
+      valor_estimated_hours(@issue.id) if @issue.tracker_id.to_s!='2'
       render_attachment_warning_if_needed(@issue)
       flash[:notice] = l(:notice_successful_update) unless @issue.current_journal.new_record?
 
@@ -224,6 +233,8 @@ class IssuesController < ApplicationController
         format.api  { render_api_ok }
       end
     else
+      #Validar el uso de nuevo desarrollo de time entrie a nivel de proyecto
+      @nuevo_desarrollo=CustomValue.find_by_customized_id_and_custom_field_id(@issue.project_id,129)
       respond_to do |format|
         format.html { render :action => 'edit' }
         format.api  { render_validation_errors(@issue) }
