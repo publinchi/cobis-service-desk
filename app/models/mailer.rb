@@ -448,6 +448,17 @@ class Mailer < ActionMailer::Base
       super
     end
   end
+  
+  
+  # TODO: Encuesta - PES
+  def poll_fill(user_id, project_id, issue_id)
+    user = User.find user_id
+    puts ":::::::::::::::::::::::::OK SENDING MAIL TO #{user.mail}"
+    set_language_if_valid(user.language)
+    @url = url_for(:controller => 'polls', :action => 'index', :project_id => project_id, :issue_id => issue_id)
+    mail :to => user.mail,
+      :subject => 'Encuesta de satisfaccion'
+  end
 
   private
 
