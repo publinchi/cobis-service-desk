@@ -1,0 +1,33 @@
+<%= javascript_include_tag 'validator.js', :plugin => 'polls' %>
+<%= error_messages_for 'query' %>
+
+<h3>Encuesta</h3>
+<p>Agradecemos el tiempo que pueda dedicar a responder estas preguntas, 
+    con el objetivo de conocer su opinión de acuerdo a la calidad de servicio proporcionado.</p>
+
+<% @polls = Poll.find_all_by_project_id @project_id %>
+<% if @remote == nil %>
+  <% @remote = true %>
+  <% puts "@remote = #{@remote}" %>
+<% end %>
+<%= form_tag({:controller => 'polls', :action => 'create'}, :name=>"form", :class=>"validar_form", :remote => @remote) do %>   
+  <%= hidden_field :issue_id, @issue.id  %>
+  <%= hidden_field_tag 'polls_count', @polls.count %>
+  <%= hidden_field_tag 'remote', @remote %>
+  <%= hidden_field_tag 'project_id', @project_id %>
+
+  <% @polls.each do |poll| %>
+    <p><%= poll.question %></p>
+
+    <% if poll.open == true %>
+      <p><%= text_area "poll_answers[#{poll.id}]", :answer_open, :cols => 60, :rows => 2 %></p>
+    <% else %>
+      <% poll.answers.each do |answer| %>
+        <p><%= radio_button_tag "poll_answers[#{poll.id}]", answer.id %><%=answer.name %></p>
+      <% end %>
+    <% end %>
+
+  <% end %>
+
+  <%= submit_tag l(:button_submit)%>  
+<% end %>

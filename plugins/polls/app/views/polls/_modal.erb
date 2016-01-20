@@ -1,0 +1,12 @@
+<%= stylesheet_link_tag 'basic.css', :plugin => 'polls' %>
+<%= javascript_include_tag 'jquery.simplemodal.js', :plugin => 'polls' %>
+
+<!-- modal content -->
+<div id="basic-modal-content">
+    <%= render :partial => "/polls/polls" %>
+</div>
+
+<!-- preload the images -->
+<div style='display:none'>
+    <%= image_tag 'basic/x.png', :plugin => 'polls' %>
+</div>
