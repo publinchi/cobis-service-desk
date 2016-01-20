@@ -6,8 +6,43 @@ replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
   $('#log_time').hide();
 <% end %>
 
-<% if params[:name] == 'status_id' && !User.current.client?%>
-  <%@issue_valor_estado=Issue.find(@issue.id).status_id%>
+<!-- TODO: Encuesta - PES - INICIO -->
+<!-- Valido: -->
+<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario cliente      5. Peticion no tiene encuesta llena -->
+<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && User.current.client? && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+  $('#basic-modal-content').modal();
+<% end %>
+
+<!-- Valido: -->
+<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario no cliente    5. Usuario actual no es el autor       6. Peticion no tiene encuesta llena    -->
+<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id != @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+  alert('1::: Se enviará la encuesta a <%= @issue.author.name %> vía e-mail.');
+  $.ajax({
+  url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
+  type: 'post',
+  data: { user_id: "<%= @issue.author.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
+  });
+<% end %>
+
+<!-- Valido: -->
+<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario no cliente    5. Usuario actual es el autor          6. Peticion no tiene encuesta llena    -->
+<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id == @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+  <% watchers = Watcher.find_all_by_watchable_id @issue.id  %> 
+  <% watchers.each do |watcher| %>
+    <% if watcher.user.client? %>
+      alert('2::: Se enviará la encuesta a <%= watcher %> vía e-mail.');
+      $.ajax({
+      url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
+      type: 'post',
+      data: { user_id: "<%= watcher.user.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
+      });
+    <% end %>
+  <% end %>
+<% end %>
+<!-- TODO: Encuesta - PES - FIN -->
+
+<% if params[:name] == 'status_id' && !User.current.client? %>
+  <% @issue_valor_estado = Issue.find(@issue.id).status_id %>
   var dev_interno = document.getElementById("issue_custom_field_values_82");
   var dev_cliente = document.getElementById("issue_custom_field_values_112");
   var val_interno = $('#issue_custom_field_values_82').val();
@@ -29,23 +64,23 @@ replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
   document.getElementById("issue_custom_field_values_82").selectedIndex = valor_anterior;
   document.getElementById("issue_custom_field_values_112").selectedIndex = valor_anterior_cliente;
 
-  <%if (params[:issue][:status_id].to_i==@issue_valor_estado.to_i)%>
+  <% if (params[:issue][:status_id].to_i == @issue_valor_estado.to_i) %>
     document.getElementById("issue_custom_field_values_82").selectedIndex = valor_anterior;
     document.getElementById("issue_custom_field_values_112").selectedIndex = valor_anterior_cliente;
-  <%else%>
-    <%if (params[:issue][:status_id].to_i == 16 and (@issue_valor_estado.to_i == 14 or @issue_valor_estado.to_i == 15 or @issue_valor_estado.to_i == 19 or @issue_valor_estado.to_i == 23 or @issue_valor_estado.to_i == 54 )) or
-        (@issue_valor_estado.to_i == 15 and params[:issue][:status_id].to_i==14) or
-        (@issue_valor_estado.to_i == 19 and params[:issue][:status_id].to_i==15) or
-        (@issue_valor_estado.to_i == 23 and params[:issue][:status_id].to_i==19) or
-        (@issue_valor_estado.to_i == 44 and params[:issue][:status_id].to_i==47)%>
+  <% else %>
+    <% if (params[:issue][:status_id].to_i == 16 and (@issue_valor_estado.to_i == 14 or @issue_valor_estado.to_i == 15 or @issue_valor_estado.to_i == 19 or @issue_valor_estado.to_i == 23 or @issue_valor_estado.to_i == 54 )) or
+        (@issue_valor_estado.to_i == 15 and params[:issue][:status_id].to_i == 14) or
+        (@issue_valor_estado.to_i == 19 and params[:issue][:status_id].to_i == 15) or
+        (@issue_valor_estado.to_i == 23 and params[:issue][:status_id].to_i == 19) or
+        (@issue_valor_estado.to_i == 44 and params[:issue][:status_id].to_i == 47) %>
       document.getElementById("issue_custom_field_values_82").selectedIndex = "0";
       $('#issue_custom_field_values_82').show().attr('disabled', false);
-    <%end%>
-    <%if (params[:issue][:status_id].to_i==17) || (params[:issue][:status_id].to_i==16 and @issue_valor_estado.to_i==5) || (params[:issue][:status_id].to_i==24 and @issue_valor_estado.to_i==57) || (params[:issue][:status_id].to_i==44 and @issue_valor_estado.to_i==27)  %>
+    <% end %>
+    <% if (params[:issue][:status_id].to_i == 17) || (params[:issue][:status_id].to_i == 16 and @issue_valor_estado.to_i == 5) || (params[:issue][:status_id].to_i == 24 and @issue_valor_estado.to_i == 57) || (params[:issue][:status_id].to_i == 44 and @issue_valor_estado.to_i == 27) %>
       document.getElementById("issue_custom_field_values_112").selectedIndex = "0";
       $('#issue_custom_field_values_112').show().attr('disabled', false);
-    <%end%>
-  <%end%>
+    <% end %>
+  <% end %>
   alert('Por favor, valide el campo Asignado a.');
   ("#issue_assigned_to_id").focus();
 <% end %>
