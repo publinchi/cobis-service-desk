@@ -5,7 +5,13 @@
 <p>Agradecemos el tiempo que pueda dedicar a responder estas preguntas, 
     con el objetivo de conocer su opinión de acuerdo a la calidad de servicio proporcionado.</p>
 
-<% @polls = Poll.find_all_by_project_id @project_id %>
+<% if @project_id != nil %>
+  <% project_identifier = @project_id %>
+<% else %>
+  <% project = Project.find @issue.project_id %>
+  <% project_identifier = project.identifier %>
+<% end %>
+<% @polls = Poll.find_all_by_project_id project_identifier %>
 <% if @remote == nil %>
   <% @remote = true %>
   <% puts "@remote = #{@remote}" %>
