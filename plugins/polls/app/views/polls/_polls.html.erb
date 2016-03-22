@@ -2,8 +2,8 @@
 <%= error_messages_for 'query' %>
 
 <h3>Encuesta</h3>
-<p>Agradecemos el tiempo que pueda dedicar a responder estas preguntas, 
-    con el objetivo de conocer su opinión de acuerdo a la calidad de servicio proporcionado.</p>
+<p>Su retroalimentación es importante para mejorar nuestro servicio.  
+  Agradecemos dejarnos conocer su opinión respecto a la atención brindada en este soporte:</p>
 
 <% if @project_id != nil %>
   <% project_identifier = @project_id %>
@@ -35,5 +35,5 @@
 
   <% end %>
 
-  <%= submit_tag l(:button_submit)%>  
+  <%= submit_tag l(:button_submit)%>
 <% end %>

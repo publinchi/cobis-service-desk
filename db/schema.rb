@@ -30,6 +30,11 @@ ActiveRecord::Schema.define(:version => 20140314204124) do
   add_index "agile_ranks", ["issue_id"], :name => "index_issue_status_orders_on_issue_id"
   add_index "agile_ranks", ["position"], :name => "index_issue_status_orders_on_position"
 
+  create_table "answers", :force => true do |t|
+    t.string  "name",    :null => false
+    t.integer "poll_id", :null => false
+  end
+
   create_table "attachments", :force => true do |t|
     t.integer  "container_id"
     t.string   "container_type", :limit => 30
@@ -158,6 +163,14 @@ ActiveRecord::Schema.define(:version => 20140314204124) do
 
   add_index "comments", ["author_id"], :name => "index_comments_on_author_id"
   add_index "comments", ["commented_id", "commented_type"], :name => "index_comments_on_commented_id_and_commented_type"
+
+  create_table "contracted_hours", :force => true do |t|
+    t.integer "project_id"
+    t.text    "filters"
+    t.string  "hours"
+    t.string  "name"
+    t.integer "related_id"
+  end
 
   create_table "custom_fields", :force => true do |t|
     t.string  "type",            :limit => 30, :default => "",    :null => false
@@ -450,6 +463,21 @@ ActiveRecord::Schema.define(:version => 20140314204124) do
     t.integer "timestamp",  :null => false
     t.string  "server_url"
     t.string  "salt",       :null => false
+  end
+
+  create_table "poll_answers", :force => true do |t|
+    t.integer "user_id",     :null => false
+    t.integer "issue_id",    :null => false
+    t.integer "poll_id",     :null => false
+    t.integer "answer_id"
+    t.string  "answer_open"
+  end
+
+  create_table "polls", :force => true do |t|
+    t.string  "question"
+    t.string  "project_id",                    :null => false
+    t.boolean "open",                          :null => false
+    t.boolean "mandatory",  :default => false, :null => false
   end
 
   create_table "projects", :force => true do |t|

@@ -17,7 +17,7 @@
 
 class Tracker < ActiveRecord::Base
 
-  CORE_FIELDS_UNDISABLABLE = %w(project_id tracker_id subject description priority_id category_id is_private).freeze
+  CORE_FIELDS_UNDISABLABLE = %w(project_id tracker_id subject description priority_id category_id is_private route_id).freeze
   # Fields that can be disabled
   # Other (future) fields should be appended, not inserted!
   CORE_FIELDS = %w(assigned_to_id fixed_version_id parent_issue_id start_date due_date estimated_hours done_ratio).freeze

@@ -1,3 +1,10 @@
+$(document).keydown(function(e) {
+if (e.keyCode == 27) {
+e.returnValue = false;
+e.keyCode = 0;
+}
+});
+
 replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
 
 <% if User.current.allowed_to?(:log_time, @issue.project) %>
@@ -6,40 +13,38 @@ replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
   $('#log_time').hide();
 <% end %>
 
-<!-- TODO: Encuesta - PES - INICIO -->
-<!-- Valido: -->
-<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario cliente      5. Peticion no tiene encuesta llena -->
-<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && User.current.client? && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
-  $('#basic-modal-content').modal();
-<% end %>
+<% if ((@issue.tracker_id==1 and @project.parent_id==10) or 
+      ((@issue.project_id==304 or @issue.project_id==95 or @issue.project_id==79 or @issue.project_id==159 or @issue.project_id==117) and @issue.tracker_id==6 and CustomValue.find_by_customized_id_and_custom_field_id_and_value(@issue.id,64,'Mejora')==nil) or
+      (@issue.tracker_id==6 and @project.parent_id==105))%>
 
-<!-- Valido: -->
-<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario no cliente    5. Usuario actual no es el autor       6. Peticion no tiene encuesta llena    -->
-<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id != @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
-  alert('1::: Se enviará la encuesta a <%= @issue.author.name %> vía e-mail.');
-  $.ajax({
-  url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
-  type: 'post',
-  data: { user_id: "<%= @issue.author.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
-  });
-<% end %>
+  <% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && User.current.client? && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+    $('#basic-modal-content').modal();
+  <% end %>
 
-<!-- Valido: -->
-<!--  1. Caso publico       2. Elemento Estado              3. Estado posterior cerrado              4. Usuario no cliente    5. Usuario actual es el autor          6. Peticion no tiene encuesta llena    -->
-<% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id == @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
-  <% watchers = Watcher.find_all_by_watchable_id @issue.id  %> 
-  <% watchers.each do |watcher| %>
-    <% if watcher.user.client? %>
-      alert('2::: Se enviará la encuesta a <%= watcher %> vía e-mail.');
-      $.ajax({
-      url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
-      type: 'post',
-      data: { user_id: "<%= watcher.user.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
-      });
+  <% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id != @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+    alert('1::: Se enviará la encuesta a <%= @issue.author.name %> vía e-mail.');
+    $.ajax({
+    url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
+    type: 'post',
+    data: { user_id: "<%= @issue.author.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
+    });
+  <% end %>
+
+  <% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id == @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+    <% watchers = Watcher.find_all_by_watchable_id @issue.id  %> 
+    <% watchers.each do |watcher| %>
+      <% if watcher.user.client? %>
+        <%@usuario_watcher=User.find(watcher.user.id)%>
+        alert('2::: Se enviará la encuesta a <%= @usuario_watcher.firstname%> <%=@usuario_watcher.lastname %> vía e-mail.');
+        $.ajax({
+        url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
+        type: 'post',
+        data: { user_id: "<%= watcher.user.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
+        });
+      <% end %>
     <% end %>
   <% end %>
 <% end %>
-<!-- TODO: Encuesta - PES - FIN -->
 
 <% if params[:name] == 'status_id' && !User.current.client? %>
   <% @issue_valor_estado = Issue.find(@issue.id).status_id %>
@@ -84,3 +89,4 @@ replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
   alert('Por favor, valide el campo Asignado a.');
   ("#issue_assigned_to_id").focus();
 <% end %>
+

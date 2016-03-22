@@ -585,6 +585,24 @@ class Issue < ActiveRecord::Base
   end
 
   def validate_issue
+    
+    if !self.id.blank? and self.status_id==8 or self.status_id==18 or self.status_id==20 or self.status_id==66
+      @relations = self.relations
+      if @relations.size>0
+        @relations.each do |rela|
+          @relaciones = IssueRelation.find(rela.id)
+          if !@relaciones.blank? and @relaciones.issue_to_id==self.id
+            @issue_relacion=Issue.find(@relaciones.issue_from_id)
+            if (@issue_relacion.status_id==8 or @issue_relacion.status_id==18 or @issue_relacion.status_id==20 or @issue_relacion.status_id==66)
+              puts "no hacer nada"
+            else
+              errors.add(:base, "No es posible Cerrar/Cancelar/Eliminar el caso debido a que esta relacionada con la #{@issue_relacion}") 
+            end
+          end
+        end
+      end
+    end
+    
     if due_date && start_date && (start_date_changed? || due_date_changed?) && due_date < start_date
       errors.add :due_date, :greater_than_start_date
     end
@@ -612,12 +630,12 @@ class Issue < ActiveRecord::Base
         end
       end
       
-      #validación responsable obligatorio cuando se pase de pendiente a análisis funcional
-      
-      if User.current.allowed_to?(:view_responsable, self.project)
-        errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
-      end
-      
+#      #validación responsable obligatorio cuando se pase de pendiente a análisis funcional
+#      
+#      if User.current.allowed_to?(:view_responsable, self.project)
+#        errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
+#      end
+#      
       custom_field_values.each { |custom|  
         if custom.custom_field_id.to_i== 82 && custom.value.blank? && 
             ((@issue.status_id == 14 && self.status_id==16 ) ||

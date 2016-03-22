@@ -876,6 +876,88 @@ order by 6)")
   end
   #Fin de funciones
   
+  #Politicas de Cierre
+  def politicas_cierre(id)
+    ActiveRecord::Base.connection.select_all("select distinct j.journalized_id as \"#\",  
+(select name from issue_statuses where cast(id as char(4))=(select jd.value from journal_details jd where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='status_id' order by jd.id desc limit 1)) as \"Estado\",
+(select u.firstname || ' ' || u.lastname from users u where cast(id as char(4))=(select jd.value from journal_details jd where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='assigned_to_id' order by jd.id desc limit 1)) as \"Asignado\",
+ j.created_on as \"Fecha_inicio\"
+from journals j join issues i on j.journalized_id=i.id where 
+j.id=(select jd.journal_id from journal_details jd where journal_id in (select id from journals where journalized_id=#{id}) and prop_key='status_id' order by jd.id desc limit 1)
+order by 1
+      ")
+  end
+  
+  def report_politicas_cierre
+    @project = Project.find params[:project_id]
+    ###
+    retrieve_query
+    #    sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
+    #    sort_update(@query.sortable_columns)
+    
+    if @query.valid?
+      @limit = Setting.issues_export_limit.to_i
+
+      @issue_count = @query.issue_count
+      @issue_pages = Paginator.new self, @issue_count, @limit, params['page']
+      @offset ||= @issue_pages.current.offset
+      @issues = @query.issues(:include => [:assigned_to, :tracker, :priority, :category, :fixed_version],
+        #        :order => sort_clause,
+        :offset => @offset,
+        :limit => @limit)
+
+      @iss = []
+      @issues.each{|i|
+        issue = Issue.find i.id
+        @iss << issue
+      }
+      respond_to do |format|
+        format.html { send_data(politica_cierre_to_csv(@iss, @project), :type => 'text/csv; header=present', :filename => 'export.csv')  }
+      end      
+    end
+    ###
+  end
+  
+  def politica_cierre_to_csv(issues, project = nil)
+    #    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')
+    encoding = l(:general_csv_encoding)
+    export = FCSV.generate(:col_sep => l(:general_csv_separator)) do |csv|
+      # csv header fields
+      headers = [ "#",
+        l(:field_status),
+        l(:field_project),
+        "Asignado A",
+        "Fecha Inicio",
+        "Fecha Fin/Actual"
+      ]
+      #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
+      csv << headers.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+      issues.each{|issue|
+        # csv lines
+        @cierre=[]
+        @cierre=politicas_cierre(issue.id)
+        @issue = Issue.find(issue.id)
+        @project = Project.find (@issue.project_id)
+        @valor_arreglo=@cierre.size
+        if @valor_arreglo>0
+          @first=@cierre.first
+          @cierre.each do |cierre|
+            fields = [cierre["#"],
+              cierre["Estado"],
+              @project.name,
+              cierre["Asignado"],
+              cierre["Fecha_inicio"].to_datetime.strftime("%m/%d/%Y %H:%M"),
+              @issue.updated_on
+            ]
+            csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }   
+          end
+        end
+      }
+    end
+    export
+  end
+  #Fin politicas de Cierre
+  
   def report_activities
     @project = Project.find params[:project_id]
     ###
@@ -1016,8 +1098,6 @@ order by 6)")
     end
     export
   end
-  
-  
   #Fin Requerimiento
 end
 

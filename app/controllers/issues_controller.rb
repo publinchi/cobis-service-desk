@@ -207,7 +207,7 @@ class IssuesController < ApplicationController
     @fecha_antes = fecha_issue(@issue.id)
     update
   end
-
+ 
   def update
     return unless update_issue_from_params
     @issue.save_attachments(params[:attachments] || (params[:issue] && params[:issue][:uploads]))

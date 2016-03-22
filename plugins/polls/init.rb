@@ -8,7 +8,7 @@ Redmine::Plugin.register :polls do
   permission :polls, { :polls => [:index, :create] }, :require => :member
   
   menu :project_menu, :polls, { :controller => 'polls', :action => 'index' }, :caption => 'Polls', :after => :activity, :param => :project_id
-
+  
   project_module :polls do
     permission :view_polls, :polls => :index
     permission :create_polls, :polls => :create

@@ -1194,3 +1194,4 @@ es:
   label_custom_field_select_type: Seleccione el tipo de objeto al que unir el campo personalizado
   field_ingreso: Unica vez
   permission_edit_unica_vez: Modificar fechas registradas unica vez
+  label_status_nota: Nota publica obligatoria

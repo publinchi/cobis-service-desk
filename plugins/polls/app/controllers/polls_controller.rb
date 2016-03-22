@@ -6,7 +6,7 @@ class PollsController < ApplicationController
     @issue = Issue.find(params[:issue_id])
     @project_id = params[:project_id]
   end
-
+ 
   def create
     poll_answerses = params[:poll_answers]
     issue_param = params[:issue_id]
