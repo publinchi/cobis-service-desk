@@ -470,7 +470,9 @@ ActiveRecord::Schema.define(:version => 20140314204124) do
     t.integer "issue_id",    :null => false
     t.integer "poll_id",     :null => false
     t.integer "answer_id"
-    t.string  "answer_open"
+    t.string  "answer_open", :limit => 300
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "polls", :force => true do |t|

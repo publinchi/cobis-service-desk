@@ -18,7 +18,7 @@ class PollsController < ApplicationController
       redirect_to :controller => "polls", :action => "index", :issue_id => issue_id, :project_id => params[:project_id]
       return
     end
-
+    
     if poll_answerses != nil
       poll_answerses.keys.each{ |poll_id|
         @poll_answers = PollAnswers.new

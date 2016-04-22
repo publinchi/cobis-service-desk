@@ -108,7 +108,39 @@ class IssuesController < ApplicationController
     render_404
   end
 
+  def otro(id)
+    ActiveRecord::Base.connection.select_all("select i.id as \"caso\", p.identifier as \"proyecto\" from issues i join projects p on i.project_id=p.id where (i.project_id in (select id from projects where parent_id=10) and i.tracker_id=1) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id in (select id from issue_statuses where is_closed='t') 
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'
+and i.author_id=#{id}
+union
+select i.id as \"caso\", p.identifier as \"proyecto\" from issues i join projects p on i.project_id=p.id where (i.project_id in (304,95,79,159,117) and i.tracker_id=6) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id in (select id from issue_statuses where is_closed='t') 
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'
+and i.id in (select customized_id from custom_values where custom_field_id=64 and value='Mejora')
+and i.author_id=#{id}
+union
+select i.id as \"caso\", p.identifier as \"proyecto\" from issues i join projects p on i.project_id=p.id where (i.project_id in (select id from projects where parent_id=105) and i.tracker_id=6) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id in (select id from issue_statuses where is_closed='t') 
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'
+and i.author_id=#{id}")
+  end
+    
   def show
+    @encuestas=[]
+    @encuestas=otro(User.current.id) if User.current.client?
     @journals = @issue.journals.includes(:user, :details).reorder("#{Journal.table_name}.id ASC").all
     @journals.each_with_index {|j,i| j.indice = i+1}
     @journals.reject!(&:private_notes?) unless User.current.allowed_to?(:view_private_notes, @issue.project)
@@ -149,12 +181,16 @@ class IssuesController < ApplicationController
   # Add a new issue
   # The new issue will be created from an existing one if copy_from parameter is given
   def new
+    @encuestas=[]
+    @encuestas=otro(User.current.id) if User.current.client?
     respond_to do |format|
       format.html { render :action => 'new', :layout => !request.xhr? }
     end
   end
 
   def create
+    @encuestas=[]
+    @encuestas=otro(User.current.id) if User.current.client?
     call_hook(:controller_issues_new_before_save, { :params => params, :issue => @issue })
     @issue.save_attachments(params[:attachments] || (params[:issue] && params[:issue][:uploads]))
     if @issue.save

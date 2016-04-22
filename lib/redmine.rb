@@ -153,6 +153,8 @@ Redmine::AccessControl.map do |map|
     map.permission :add_issue_notes_update, {:issues => [:edit, :update, :edit_extra, :update_extra, :get_assignable_users], :journals => [:new]}
     #Agregar permiso unica vez
     map.permission :edit_unica_vez, {} 
+    #Permiso para copiar issues
+    map.permission :copy_issue, {}
   end
 
   map.project_module :time_tracking do |map|

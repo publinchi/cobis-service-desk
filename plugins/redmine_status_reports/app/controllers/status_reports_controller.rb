@@ -16,6 +16,174 @@ class StatusReportsController < ApplicationController
   def show
   end
   
+  #  Reporte Encuestas Resueltas
+  def encuestas
+    ActiveRecord::Base.connection.select_all("select pa.id as \"id\",u.firstname ||' '|| u.lastname as \"cliente\", pa.issue_id as \"caso\", pl.question as \"pregunta\", a.name as \"respuesta\", pa.created_at as \"fechaCreacion\" from poll_answers pa join users u on pa.user_id=u.id 
+join polls pl on pa.poll_id=pl.id 
+join answers a on pa.answer_id=a.id
+union
+select  pa.id as \"id\", u.firstname ||' '|| u.lastname as \"cliente\", pa.issue_id as \"caso\", pl.question as \"pregunta\", pa.answer_open as \"respuesta\", pa.created_at as \"fechaCreacion\" from poll_answers pa join users u on pa.user_id=u.id 
+join polls pl on pa.poll_id=pl.id
+where answer_open!=''
+order by 1")
+  end
+  
+  def report_polls
+    @project = Project.find params[:project_id]
+    ###
+    retrieve_query
+    #    sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
+    #    sort_update(@query.sortable_columns)
+    
+    if @query.valid?
+      @limit = Setting.issues_export_limit.to_i
+      @issue_count = @query.issue_count
+      @issue_pages = Paginator.new self, @issue_count, @limit, params['page']
+      @offset ||= @issue_pages.current.offset
+      @issues = @query.issues(:include => [:assigned_to, :tracker, :priority, :category, :fixed_version],
+        #        :order => sort_clause,
+        :offset => @offset,
+        :limit => @limit)
+
+      @iss = []
+      @issues.each{|i|
+        issue = Issue.find i.id
+        @iss << issue
+      }
+      respond_to do |format|
+        format.html { send_data(report_polls_to_csv(@iss, @project), :type => 'text/csv; header=present', :filename => 'export.csv')  }
+      end      
+    end   
+  end
+  
+  def report_polls_to_csv(issues, project = nil)
+    #    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')
+    encoding = l(:general_csv_encoding)
+    export = FCSV.generate(:col_sep => l(:general_csv_separator)) do |csv|
+      # csv header fields
+      headers = [ 
+        "Id",
+        "Cliente",
+        "Proyecto",
+        "Caso",
+        "Estado",
+        "Modulo",
+        "Modulo Aplicacion",
+        "Componente Infraestructura",
+        "Pregunta",
+        "Respuesta",
+        "Fecha Creacion"
+      ]
+      #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
+      csv << headers.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+      # csv lines
+      @encuestas=[]
+      @encuestas=encuestas
+      puts "encuestas:#{@encuestas}"
+      @valor_arreglo_encuestas=@encuestas.size
+      puts "valor de encuestas:#{@valor_arreglo_encuestas}"
+      if @valor_arreglo_encuestas>0
+        @encuestas.each do |encuesta|
+          @issue_encuestas=Issue.find(encuesta["caso"])
+          @custom_encuesta_5=CustomValue.find_by_customized_id_and_custom_field_id(encuesta["caso"],5)
+          @custom_encuesta_17=CustomValue.find_by_customized_id_and_custom_field_id(encuesta["caso"],17)
+          @custom_encuesta_41=CustomValue.find_by_customized_id_and_custom_field_id(encuesta["caso"],41)
+          fields = [
+            encuesta["id"],
+            encuesta["cliente"],
+            @issue_encuestas.project,
+            encuesta["caso"],
+            @issue_encuestas.status,
+            @custom_encuesta_5,
+            @custom_encuesta_17,
+            @custom_encuesta_41,
+            encuesta["pregunta"],
+            encuesta["respuesta"],
+            (encuesta["fechaCreacion"]).to_datetime.strftime("%m/%d/%Y %H:%M")
+          ]
+          csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }   
+        end
+      end
+    end
+    export
+  end
+  # Fin Reporte Encuestas Resueltas
+  
+  # Reporte Encuestas Pendientes
+  def encuestas_pendientes
+    ActiveRecord::Base.connection.select_all("select i.id as \"caso\",p.name as \"proyecto\",(select firstname ||' '|| lastname  from users where id=i.author_id) as \"autor\", i.closed_on as \"fechaCierre\", 'http://servicedesk.cobiscorp.com/redmine/polls?issue_id='||i.id||'&project_id='||p.identifier as \"link\" from issues i join projects p on i.project_id=p.id where (i.project_id in (select id from projects where parent_id=10) and i.tracker_id=1) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id=18 
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'
+union
+select i.id as \"caso\",p.name as \"proyecto\",(select firstname ||' '|| lastname  from users where id=i.author_id) as \"autor\", i.closed_on as \"fechaCierre\", 'http://servicedesk.cobiscorp.com/redmine/polls?issue_id='||i.id||'&project_id='||p.identifier as \"link\" from issues i join projects p on i.project_id=p.id where (i.project_id in (304,95,79,159,117) and i.tracker_id=6) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id=18
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'
+and i.id in (select customized_id from custom_values where custom_field_id=64 and value='Mejora')
+and i.author_id=27
+union
+select i.id as \"caso\",p.name as \"proyecto\",(select firstname ||' '|| lastname  from users where id=i.author_id) as \"autor\", i.closed_on as \"fechaCierre\", 'http://servicedesk.cobiscorp.com/redmine/polls?issue_id='||i.id||'&project_id='||p.identifier as \"link\" from issues i join projects p on i.project_id=p.id where (i.project_id in (select id from projects where parent_id=105) and i.tracker_id=6) 
+and i.closed_on > '2016-02-29 00:00:00' 
+and i.status_id=18
+and i.project_id in (
+select id from projects where identifier in (select distinct(project_id) from polls) order by 1) 
+and i.id not in (select distinct(issue_id) from poll_answers)
+and i.is_private='f'")
+  end
+  
+  def report_polls_pendientes
+    ###
+    retrieve_query
+    #    sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
+    #    sort_update(@query.sortable_columns)
+    respond_to do |format|
+      format.html { send_data(report_polls_pendientes_to_csv(), :type => 'text/csv; header=present', :filename => 'export.csv')  }
+    end 
+    
+    ###
+  end
+  
+  def report_polls_pendientes_to_csv()
+    #    ic = Iconv.new(l(:general_csv_encoding), 'UTF-8')
+    encoding = l(:general_csv_encoding)
+    export = FCSV.generate(:col_sep => l(:general_csv_separator)) do |csv|
+      # csv header fields
+      headers = [ "Caso",
+        "Proyecto",
+        "Autor",
+        "Fecha de cierre",
+        "Link de encuesta"
+      ]
+      #      csv << headers.collect {|c| begin; ic.iconv(c.to_s); rescue; c.to_s; end }
+      csv << headers.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }
+      # csv lines
+      @encuestas_pendientes=[]
+      @encuestas_pendientes=encuestas_pendientes
+      @valor_arreglo_encuestas_pendientes=@encuestas_pendientes.size
+      if @valor_arreglo_encuestas_pendientes>0
+        @encuestas_pendientes.each do |encuesta_p|
+          fields = [encuesta_p["caso"],
+            encuesta_p["proyecto"],
+            encuesta_p["autor"],
+            encuesta_p["fechaCierre"],
+            encuesta_p["link"]
+          ]
+          csv << fields.collect {|c| Redmine::CodesetUtil.from_utf8(c.to_s, encoding) }   
+        end
+      end
+    end
+    export
+  end
+  # Fin Reporte Encuestas Pendientes
+  
+  
   def otro(id)
     ActiveRecord::Base.connection.select_all("(select u.firstname || ' ' || u.lastname as \"new_state\"
      from journal_details jd,

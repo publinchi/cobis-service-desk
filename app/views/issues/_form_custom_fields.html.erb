@@ -43,7 +43,7 @@
                   <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
                 <%end%>
               <%elsif value.custom_field.id == 112%>
-                <%if @issue.status_id.to_i==5 or @issue.status_id.to_i==16 or @issue.status_id.to_i==57 or @issue.status_id.to_i==24 or @issue.status_id.to_i==27 or @issue.status_id.to_i==44 or @issue.status_id.to_i==17%>
+                <%if @issue.status_id.to_i==5 or @issue.status_id.to_i==16 or @issue.status_id.to_i==57 or @issue.status_id.to_i==24 or @issue.status_id.to_i==27 or @issue.status_id.to_i==44 or @issue.status_id.to_i==17 or @issue.status_id.to_i==39 or @issue.status_id.to_i==45%>
                   <p><%= custom_field_tag_with_label :issue, value %></p>
                 <%else%>
                   <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
@@ -72,7 +72,7 @@
                 <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>
               <%end%>
             <%elsif value.custom_field.id == 112%>
-              <%if @issue.status_id.to_i==5 or @issue.status_id.to_i==16 or @issue.status_id.to_i==57 or @issue.status_id.to_i==24 or @issue.status_id.to_i==27 or @issue.status_id.to_i==44 or @issue.status_id.to_i==17%>
+              <%if @issue.status_id.to_i==5 or @issue.status_id.to_i==16 or @issue.status_id.to_i==57 or @issue.status_id.to_i==24 or @issue.status_id.to_i==27 or @issue.status_id.to_i==44 or @issue.status_id.to_i==17 or @issue.status_id.to_i==39 or @issue.status_id.to_i==45%>
                 <p><%= custom_field_tag_with_label :issue, value %></p>
               <%else%>
                 <p><%= custom_field_tag_disabled_with_label :issue, value %> </p>

@@ -1,3 +1,16 @@
+
+  <%if @encuestas.count>0 %>
+<div class="banner_info">
+Estimado cliente, 
+hemos cerrado un caso registrado en Cobis Service Desk. Le agradecemos ingresar al enlace y llenar la 
+encuesta para conocer su opinión respecto a la atención brindada durante el soporte:
+<p></p>
+    <%@encuestas.each do |encuesta|%>
+<%= link_to "- Encuesta referente al caso " + encuesta["caso"].to_s + ": " +Issue.find(encuesta["caso"]).subject, url_for(:controller => "polls", :action => "index", :issue_id => encuesta["caso"], :project_id=>encuesta["proyecto"])%></p> 
+  <%end%>
+</div>
+<%end%>
+
 <%= render :partial => 'action_menu' %>
 
 <h2><%= issue_heading(@issue) %></h2>

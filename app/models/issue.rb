@@ -630,13 +630,25 @@ class Issue < ActiveRecord::Base
         end
       end
       
-#      #validación responsable obligatorio cuando se pase de pendiente a análisis funcional
-#      
-#      if User.current.allowed_to?(:view_responsable, self.project)
-#        errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
-#      end
-#      
-      custom_field_values.each { |custom|  
+      #      #validación responsable obligatorio cuando se pase de pendiente a análisis funcional
+      #      
+      #      if User.current.allowed_to?(:view_responsable, self.project)
+      #        errors.add(:base, "Seleccione Responsable") if @issue.status_id == 1 && self.status.id.to_i == 25 && self.route_id.blank?
+      #      end
+      #  
+      
+      # Desarrollo de devoluciones
+      # Pide Motivo devolucion cliente cuando se pasa de Devuelta a Desarrollo o Atencion Solicitud o Generar Licencia
+      if self.project.parent_id.to_s=='105' or self.project.parent_id.to_s=='82'
+        custom_field_values.each { |custom|
+          if((custom.custom_field_id.to_i==112 && custom.value.blank?) &&((@issue.status_id.to_i == 17 && self.status_id.to_i==16)||(@issue.status_id.to_i == 17 && self.status_id.to_i==39)||(@issue.status_id.to_i == 17 && self.status_id.to_i==45)))
+            @custom=CustomField.find(custom.custom_field_id)
+            errors.add(:base,"#{@custom.name.to_s} no puede estar en blanco." )
+          end
+        }
+      end
+      
+      custom_field_values.each { |custom|
         if custom.custom_field_id.to_i== 82 && custom.value.blank? && 
             ((@issue.status_id == 14 && self.status_id==16 ) ||
               (@issue.status_id == 15 && (self.status_id==16 || self.status_id==14)) ||
@@ -656,6 +668,7 @@ class Issue < ActiveRecord::Base
           errors.add(:base,"#{@custom.name.to_s} no puede estar en blanco." )
         end
       }
+      #      end
       
       self.custom_values.each do |c|
         @custom_values_antes_guardar1.store c.custom_field_id, c.value
@@ -1714,7 +1727,7 @@ class Issue < ActiveRecord::Base
         if Project.find(@issue.project_id).first_answer_for_bank.blank? or Project.find(@issue.project_id).first_answer_for_bank =='false'
           @variable_proyecto_tipo=1
           exec_sp_by_custom_field 61, @issue.id, visible, solucion_enviada
-        end
+        end  
         exec_sp_by_custom_field 60, @issue.id, visible, solucion_enviada
         exec_sp_by_custom_field 74, @issue.id, visible, @solucion_temporal_enviada
         exec_sp_by_custom_field 95, @issue.id, visible, solucion_enviada
@@ -1757,6 +1770,18 @@ class Issue < ActiveRecord::Base
             next
           end
 
+          # Crea el journal de motivo devolucion cliente infraestructura
+          if self.project.parent_id==105 or self.project.parent_id==82
+            if (c.custom_field_id.to_i==112 && 
+                  ((@issue.status_id == 17 &&  self.status_id==45)||(@issue.status_id == 17 &&  self.status_id==39)||(@issue.status_id == 17 &&  self.status_id==16)) &&(@custom_bdd == @custom_values_before_change[c.custom_field_id])) 
+              @current_journal.details << JournalDetail.new(:property => 'cf',
+                :prop_key => c.custom_field_id,
+                :old_value => @custom_values_before_change[c.custom_field_id],
+                :value => @custom_bdd)
+              next
+            end
+          end
+          
           if (((c.custom_field_id.to_i==112) && 
                   ((@issue.status_id == 57 && self.status_id==24)||
                     (@issue.status_id == 5 && self.status_id==16) ||
@@ -1773,6 +1798,8 @@ class Issue < ActiveRecord::Base
               :value => @custom_bdd)
             next
           end
+          #          end
+          
           
           if (@custom_bdd != @custom_values_before_change[c.custom_field_id]) &&  !@custom_values_before_change[c.custom_field_id].blank?
             @current_journal.details << JournalDetail.new(:property => 'cf',

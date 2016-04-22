@@ -6,6 +6,8 @@ class CreatePollAnswers < ActiveRecord::Migration
       t.integer :poll_id, :null => false
       t.integer :answer_id
       t.string :answer_open
+      
+      t.timestamps
     end
   end
 end
