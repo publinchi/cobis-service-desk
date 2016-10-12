@@ -1196,3 +1196,6 @@ es:
   permission_edit_unica_vez: Modificar fechas registradas unica vez
   label_status_nota: Nota publica obligatoria
   permission_copy_issue: Copiar issue
+  permission_view_devoluciones: Reporte Devoluciones
+  permission_view_funcionales: Reporte Funcional
+  permission_view_encuestas: Reporte Encuestas

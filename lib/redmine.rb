@@ -155,6 +155,10 @@ Redmine::AccessControl.map do |map|
     map.permission :edit_unica_vez, {} 
     #Permiso para copiar issues
     map.permission :copy_issue, {}
+    #Permisos reportes
+    map.permission :view_devoluciones, {}
+    map.permission :view_funcionales, {}
+    map.permission :view_encuestas, {}
   end
 
   map.project_module :time_tracking do |map|

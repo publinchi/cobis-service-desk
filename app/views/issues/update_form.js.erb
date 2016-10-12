@@ -46,6 +46,21 @@ replaceIssueFormWith('<%= escape_javascript(render :partial => 'form') %>');
   <% end %>
 <% end %>
 
+<%if @project.parent_id.to_i==316 and @issue.tracker_id==8%> 
+  <% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id == @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+    $('#basic-modal-content').modal();
+  <% end %>
+
+  <% if !@issue.is_private && params[:name] == 'status_id' && params[:issue][:status_id].to_i == 18 && !User.current.client? && User.current.id != @issue.author.id && PollAnswers.find_by_issue_id(@issue.id) == nil %> 
+    alert('1::: Se enviará¡ la encuesta a <%= @issue.author.name %> vía e-mail.');
+    $.ajax({
+    url: '<%= url_for(:controller => "polls", :action => "send_poll_by_mail") %>',
+    type: 'post',
+    data: { user_id: "<%= @issue.author.id %>", project_id: "<%= @project.identifier %>", issue_id: "<%= @issue.id %>" }
+    });
+  <% end %>
+<% end %>
+
 <% if params[:name] == 'status_id' && !User.current.client? %>
 
   <%if @project.parent_id.to_i==105 or @project.parent_id.to_i==82%>

@@ -1,9 +1,9 @@
 <h3><%= l(:label_reports) %></h3>
 <ul>
-  <li><%= link_to(l(:label_issue_statuses_change), {:controller => 'status_reports', :action => 'report', :project_id => project,:query => @query}) if User.current.allowed_to?(:export_statuses, project) %></li>
+  <li><%= link_to(l(:label_issue_statuses_change), {:controller => 'status_reports', :action => 'report', :project_id => project,:query => @query}) if User.current.allowed_to?(:view_devoluciones, project) %></li>
   <li><%= link_to(l(:label_entries_without_answer), {:controller => 'status_reports', :action => 'entries_without_answer_report', :project_id => project}) if User.current.allowed_to?(:view_entries_without_answer, project) %></li>
   <li><%= link_to(l(:label_issue_activities_change), {:controller => 'status_reports', :action => 'report_activities', :project_id => project,:query => @query}) if User.current.allowed_to?(:export_statuses, project) %></li>
-  <li><%= link_to(l(:label_close_policity), {:controller => 'status_reports', :action => 'report_politicas_cierre', :project_id => project,:query => @query}) if User.current.allowed_to?(:export_statuses, project) %></li>
-  <li><%= link_to(l(:label_reporte_encuestas), {:controller => 'status_reports', :action => 'report_polls', :project_id => project,:query => @query}) if User.current.allowed_to?(:export_statuses, project) %></li>
-  <li><%= link_to(l(:label_reporte_encuestas_pendientes), {:controller => 'status_reports', :action => 'report_polls_pendientes'}) if User.current.allowed_to?(:export_statuses, project) %></li>
+  <li><%= link_to(l(:label_close_policity), {:controller => 'status_reports', :action => 'report_politicas_cierre', :project_id => project,:query => @query}) if User.current.allowed_to?(:view_funcionales, project) %></li>
+  <li><%= link_to(l(:label_reporte_encuestas), {:controller => 'status_reports', :action => 'report_polls', :project_id => project,:query => @query}) if User.current.allowed_to?(:view_encuestas, project) %></li>
+  <li><%= link_to(l(:label_reporte_encuestas_pendientes), {:controller => 'status_reports', :action => 'report_polls_pendientes'}) if User.current.allowed_to?(:view_encuestas, project) %></li>
 </ul>
